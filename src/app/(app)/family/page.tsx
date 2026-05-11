@@ -1,21 +1,18 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { verifyFamily } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { Crown } from "lucide-react";
 import { InviteButton } from "./InviteButton";
 
 export const metadata = { title: "Gezin – Todoit" };
+export const dynamic = "force-dynamic";
 
 export default async function FamilyPage() {
-  const session = await auth();
+  const session = await verifyFamily();
 
-  if (!session?.user?.id) redirect("/login");
+  if (session.role !== "PARENT") redirect("/dashboard");
 
-  const role = session.user.role as string | undefined;
-  const familyId = session.user.familyId as string | null | undefined;
-
-  if (!familyId) redirect("/onboarding");
-  if (role !== "PARENT") redirect("/dashboard");
+  const familyId = session.familyId;
 
   const family = await prisma.family.findUnique({
     where: { id: familyId },
