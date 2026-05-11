@@ -1,5 +1,4 @@
 import "server-only";
-import { cache } from "react";
 import { cookies } from "next/headers";
 import { decode } from "next-auth/jwt";
 import { redirect } from "next/navigation";
@@ -12,21 +11,24 @@ type SessionPayload = {
   role?: "PARENT" | "CHILD";
 };
 
-async function getSessionPayload(): Promise<SessionPayload | null> {
+export async function getSessionPayload(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
-  // NextAuth v5 uses these cookie names
-  const token =
-    cookieStore.get("__Secure-authjs.session-token")?.value ??
-    cookieStore.get("authjs.session-token")?.value ??
-    cookieStore.get("next-auth.session-token")?.value;
 
-  if (!token) return null;
+  const secureCookie = cookieStore.get("__Secure-authjs.session-token");
+  const regularCookie = cookieStore.get("authjs.session-token")
+    ?? cookieStore.get("next-auth.session-token");
+
+  const { cookie: foundCookie, salt } = secureCookie
+    ? { cookie: secureCookie, salt: "__Secure-authjs.session-token" }
+    : { cookie: regularCookie, salt: "authjs.session-token" };
+
+  if (!foundCookie?.value) return null;
 
   try {
     const payload = await decode({
-      token,
+      token: foundCookie.value,
       secret: process.env.AUTH_SECRET!,
-      salt: token.startsWith("__Secure") ? "__Secure-authjs.session-token" : "authjs.session-token",
+      salt,
     });
     if (!payload?.sub) return null;
     return {
@@ -39,17 +41,17 @@ async function getSessionPayload(): Promise<SessionPayload | null> {
   }
 }
 
-export const verifySession = cache(async (): Promise<SessionPayload> => {
+export async function verifySession(): Promise<SessionPayload> {
   const session = await getSessionPayload();
   if (!session) redirect("/login");
   return session;
-});
+}
 
-export const verifyFamily = cache(async (): Promise<SessionPayload & { familyId: string }> => {
+export async function verifyFamily(): Promise<SessionPayload & { familyId: string }> {
   const session = await verifySession();
   if (!session.familyId) redirect("/onboarding");
   return session as SessionPayload & { familyId: string };
-});
+}
 
 export async function getFullUser(): Promise<User> {
   const session = await verifySession();
