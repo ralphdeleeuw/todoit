@@ -8,7 +8,6 @@ export default async function RootPage() {
     redirect("/login");
   }
 
-  // @ts-expect-error: extended session fields
   if (!session.user.familyId) {
     redirect("/onboarding");
   }

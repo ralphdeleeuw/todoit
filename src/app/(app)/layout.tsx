@@ -11,7 +11,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect("/login");
   }
 
-  // @ts-expect-error: extended session fields
   const familyId = session.user.familyId as string | null | undefined;
   if (!familyId) {
     redirect("/onboarding");
@@ -29,7 +28,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     email: session.user.email ?? null,
     image: session.user.image ?? null,
     familyId,
-    // @ts-expect-error: extended session fields
     role: session.user.role ?? "CHILD",
   };
 
