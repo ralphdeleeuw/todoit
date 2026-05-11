@@ -1,17 +1,12 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getFullUser } from "@/lib/dal";
 import { PushSubscribeButton } from "@/components/notifications/PushSubscribeButton";
 import { SignOutButton } from "./SignOutButton";
 
 export const metadata = { title: "Instellingen – Todoit" };
+export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const session = await auth();
-
-  if (!session?.user?.id) redirect("/login");
-
-  const user = session.user;
-  const role = user.role as string | undefined;
+  const user = await getFullUser();
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
@@ -41,7 +36,7 @@ export default async function SettingsPage() {
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 capitalize">
-                {role === "PARENT" ? "Ouder" : "Kind"}
+                {user.role === "PARENT" ? "Ouder" : "Kind"}
               </p>
             </div>
           </div>
