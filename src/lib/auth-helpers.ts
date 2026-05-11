@@ -28,8 +28,8 @@ export async function requireParent(): Promise<User & { familyId: string }> {
   return user;
 }
 
-export function apiError(res: Response | unknown): Response {
-  if (res instanceof Response) return res;
-  console.error(res);
+export function apiError(e: unknown): Response {
+  if (e instanceof Response) return e;
+  console.error(e);
   return new Response("Internal server error", { status: 500 });
 }
