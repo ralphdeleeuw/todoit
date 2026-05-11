@@ -11,7 +11,6 @@ export default async function SettingsPage() {
   if (!session?.user?.id) redirect("/login");
 
   const user = session.user;
-  // @ts-expect-error: extended session fields
   const role = user.role as string | undefined;
 
   return (

@@ -11,9 +11,7 @@ export default async function FamilyPage() {
 
   if (!session?.user?.id) redirect("/login");
 
-  // @ts-expect-error: extended session fields
   const role = session.user.role as string | undefined;
-  // @ts-expect-error: extended session fields
   const familyId = session.user.familyId as string | null | undefined;
 
   if (!familyId) redirect("/onboarding");
