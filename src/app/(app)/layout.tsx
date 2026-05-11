@@ -1,34 +1,26 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { verifyFamily } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { AppShell } from "@/components/layout/AppShell";
 import type { SessionUser } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    redirect("/login");
-  }
-
-  const familyId = session.user.familyId as string | null | undefined;
-  if (!familyId) {
-    redirect("/onboarding");
-  }
+  const session = await verifyFamily();
 
   const lists = await prisma.taskList.findMany({
-    where: { familyId },
+    where: { familyId: session.familyId },
     orderBy: { name: "asc" },
     select: { id: true, name: true, color: true },
   });
 
   const user: SessionUser = {
-    id: session.user.id,
-    name: session.user.name ?? null,
-    email: session.user.email ?? null,
-    image: session.user.image ?? null,
-    familyId,
-    role: session.user.role ?? "CHILD",
+    id: session.id,
+    name: null,
+    email: null,
+    image: null,
+    familyId: session.familyId,
+    role: session.role ?? "CHILD",
   };
 
   return (

@@ -1,14 +1,12 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { verifySession } from "@/lib/dal";
+
+export const dynamic = "force-dynamic";
 
 export default async function RootPage() {
-  const session = await auth();
+  const session = await verifySession();
 
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  if (!session.user.familyId) {
+  if (!session.familyId) {
     redirect("/onboarding");
   }
 
