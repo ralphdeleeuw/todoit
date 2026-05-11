@@ -1,28 +1,28 @@
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export const proxy = auth((req) => {
-  const session = req.auth;
+const protectedRoutes = ["/dashboard", "/list", "/family", "/settings"];
+const authRoutes = ["/login", "/onboarding"];
+
+export default async function proxy(req: NextRequest) {
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+  });
+
   const { pathname } = req.nextUrl;
-  const isLoggedIn = !!session?.user;
+  const isLoggedIn = !!token;
+  const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
+  const isAuthRoute = authRoutes.some((r) => pathname.startsWith(r));
 
-  const isAppRoute =
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/list") ||
-    pathname.startsWith("/family") ||
-    pathname.startsWith("/settings");
-
-  const isAuthRoute =
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/onboarding");
-
-  if (!isLoggedIn && isAppRoute) {
+  if (!isLoggedIn && isProtected) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const hasFamilyId = !!session?.user?.familyId;
+  const hasFamilyId = !!(token as { familyId?: string } | null)?.familyId;
 
-  if (isLoggedIn && !hasFamilyId && isAppRoute) {
+  if (isLoggedIn && !hasFamilyId && isProtected) {
     return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
@@ -31,8 +31,8 @@ export const proxy = auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|icons|manifest|sw\\.js).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon\\.ico|icons|manifest|sw\\.js).*)"],
 };
