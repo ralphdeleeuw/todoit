@@ -86,13 +86,14 @@ export function NewTaskButton({
       <Dialog.Trigger asChild>
         {variant === "fab" ? (
           <button
+            type="button"
             className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-30 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all active:scale-95"
             aria-label="Nieuwe taak"
           >
             <Plus className="w-6 h-6" />
           </button>
         ) : (
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm hover:shadow">
+          <button type="button" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm hover:shadow">
             <Plus className="w-4 h-4" />
             Nieuwe taak
           </button>
