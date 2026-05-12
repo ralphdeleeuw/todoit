@@ -60,7 +60,7 @@ export function TaskDetailSheet({
     description: task.description ?? "",
     dueDate: task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : "",
     assigneeId: task.assigneeId ?? currentUserId,
-    listId: task.listId ?? "",
+    listId: task.listId ?? "__none__",
     labelIds: task.labels.map((l) => l.label.id),
     isRecurring: task.isRecurring,
     recurrenceInterval: task.recurrenceInterval ?? 7,
