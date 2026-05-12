@@ -17,7 +17,8 @@ export async function POST(req: Request) {
       },
     });
 
-    const url = `${process.env.NEXTAUTH_URL}/join?token=${invite.token}`;
+    const origin = process.env.NEXTAUTH_URL ?? new URL(req.url).origin;
+    const url = `${origin}/join?token=${invite.token}`;
     return NextResponse.json({ token: invite.token, url }, { status: 201 });
   } catch (e) {
     return apiError(e);
