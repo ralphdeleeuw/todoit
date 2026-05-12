@@ -1,4 +1,4 @@
-const CACHE = 'todoit-v1'
+const CACHE = 'todoit-v2'
 
 const PRECACHE = [
   '/icons/icon-192x192.svg',
