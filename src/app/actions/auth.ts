@@ -6,6 +6,10 @@ export async function googleSignIn() {
   await signIn("google", { redirectTo: "/dashboard" });
 }
 
+export async function googleSignInWithRedirect(redirectTo: string) {
+  await signIn("google", { redirectTo });
+}
+
 export async function handleSignOut() {
   await signOut({ redirectTo: "/login" });
 }

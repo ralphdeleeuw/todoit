@@ -7,7 +7,8 @@ import type { FamilyRole } from "@prisma/client";
 export async function POST(req: Request) {
   try {
     const parent = await requireParent();
-    const { role = "CHILD" }: { role?: FamilyRole } = await req.json();
+    const { role = "CHILD", origin: clientOrigin }: { role?: FamilyRole; origin?: string } =
+      await req.json();
 
     const invite = await prisma.familyInvite.create({
       data: {
@@ -17,8 +18,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const origin = process.env.NEXTAUTH_URL ?? new URL(req.url).origin;
-    const url = `${origin}/join?token=${invite.token}`;
+    const url = `${clientOrigin}/join?token=${invite.token}`;
     return NextResponse.json({ token: invite.token, url }, { status: 201 });
   } catch (e) {
     return apiError(e);
