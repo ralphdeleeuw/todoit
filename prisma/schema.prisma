@@ -46,6 +46,8 @@ model User {
   assignedTasks  Task[]            @relation("AssignedTo")
   createdTasks   Task[]            @relation("CreatedBy")
   pushSubs       PushSubscription[]
+  ownedLists     TaskList[]        @relation("OwnedLists")
+  sharedLists    TaskListMember[]  @relation("SharedListMember")
 }
 
 // NextAuth required tables
@@ -99,15 +101,34 @@ model FamilyInvite {
 
 // ─── Task Organization ─────────────────────────────────────────────────────
 
+enum ListVisibility {
+  PRIVATE
+  FAMILY
+  SHARED
+}
+
 model TaskList {
-  id       String   @id @default(cuid())
-  name     String
-  color    String?
-  familyId String
-  family   Family   @relation(fields: [familyId], references: [id])
-  tasks    Task[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String         @id @default(cuid())
+  name       String
+  color      String?
+  familyId   String
+  family     Family         @relation(fields: [familyId], references: [id])
+  ownerId    String?
+  owner      User?          @relation("OwnedLists", fields: [ownerId], references: [id])
+  visibility ListVisibility @default(FAMILY)
+  members    TaskListMember[]
+  tasks      Task[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model TaskListMember {
+  listId String
+  userId String
+  list   TaskList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  user   User     @relation("SharedListMember", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([listId, userId])
 }
 
 model Label {
