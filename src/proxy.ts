@@ -46,13 +46,8 @@ export default async function proxy(req: NextRequest) {
   const session = await getSession(req);
   const isLoggedIn = !!session;
   const hasFamilyId = !!session?.familyId;
-
   if (!isLoggedIn && isProtected) {
     return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  if (isLoggedIn && !hasFamilyId && isProtected) {
-    return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
   if (isLoggedIn && hasFamilyId && isAuthRoute) {
