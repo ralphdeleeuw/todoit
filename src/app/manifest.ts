@@ -8,10 +8,26 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/dashboard",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#4f46e5",
-    theme_color: "#4f46e5",
+    background_color: "#1c1917",
+    theme_color: "#7c2d12",
     categories: ["productivity", "utilities"],
     icons: [
+      {
+        src: "/api/icons?size=192",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        src: "/api/icons?size=512",
+        sizes: "512x512",
+        type: "image/png",
+      },
+      {
+        src: "/api/icons?size=512",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
       {
         src: "/icons/icon-192x192.svg",
         sizes: "192x192",
@@ -21,12 +37,6 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icons/icon-512x512.svg",
         sizes: "512x512",
         type: "image/svg+xml",
-      },
-      {
-        src: "/icons/icon-512x512.svg",
-        sizes: "512x512",
-        type: "image/svg+xml",
-        purpose: "maskable",
       },
     ],
   };
