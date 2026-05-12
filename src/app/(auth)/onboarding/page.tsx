@@ -30,12 +30,6 @@ export default function OnboardingPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Er ging iets mis");
       }
-      // Refresh the JWT token so it picks up the new familyId
-      await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event: "update" }),
-      });
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
@@ -59,12 +53,6 @@ export default function OnboardingPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Ongeldig uitnodigingstoken");
       }
-      // Refresh the JWT token so it picks up the new familyId
-      await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event: "update" }),
-      });
       router.push("/dashboard");
       router.refresh();
     } catch (err) {

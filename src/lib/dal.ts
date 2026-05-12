@@ -49,8 +49,14 @@ export async function verifySession(): Promise<SessionPayload> {
 
 export async function verifyFamily(): Promise<SessionPayload & { familyId: string }> {
   const session = await verifySession();
-  if (!session.familyId) redirect("/onboarding");
-  return session as SessionPayload & { familyId: string };
+  if (session.familyId) return session as SessionPayload & { familyId: string };
+  // JWT token may be stale (e.g. family was just created). Fall back to DB.
+  const user = await prisma.user.findUnique({
+    where: { id: session.id },
+    select: { familyId: true, role: true },
+  });
+  if (!user?.familyId) redirect("/onboarding");
+  return { ...session, familyId: user.familyId, role: user.role ?? session.role };
 }
 
 export async function getFullUser(): Promise<User> {
