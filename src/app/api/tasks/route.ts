@@ -8,6 +8,7 @@ const taskInclude = {
   createdBy: { select: { id: true, name: true } },
   list: { select: { id: true, name: true, color: true } },
   labels: { include: { label: { select: { id: true, name: true, color: true } } } },
+  subtasks: { select: { id: true, title: true, completedAt: true } },
 } as const;
 
 export async function GET(req: Request) {
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
     const user = await requireFamily();
     const { searchParams } = new URL(req.url);
 
-    const where: Record<string, unknown> = { familyId: user.familyId };
+    const where: Record<string, unknown> = { familyId: user.familyId, subtaskParentId: null };
 
     if (user.role === "CHILD") {
       where.OR = [{ assigneeId: user.id }, { createdById: user.id }];
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
         createdById: user.id,
         isRecurring: body.isRecurring ?? false,
         recurrenceInterval: body.recurrenceInterval ?? null,
+        subtaskParentId: body.subtaskParentId ?? null,
         labels: body.labelIds?.length
           ? { create: body.labelIds.map((id: string) => ({ labelId: id })) }
           : undefined,

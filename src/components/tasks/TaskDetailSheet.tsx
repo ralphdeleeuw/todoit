@@ -4,7 +4,8 @@ import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Trash2 } from "lucide-react";
 import { TaskForm, type TaskFormData } from "./TaskForm";
-import type { TaskWithRelations } from "@/types";
+import { SubtaskList } from "./SubtaskList";
+import type { TaskWithRelations, SubtaskSummary } from "@/types";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -54,6 +55,7 @@ export function TaskDetailSheet({
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [subtasks, setSubtasks] = useState<SubtaskSummary[]>(task.subtasks);
 
   const initialData: TaskFormData = {
     title: task.title,
@@ -156,6 +158,13 @@ export function TaskDetailSheet({
               submitLabel="Wijzigingen opslaan"
               loading={loading}
             />
+            <div className="mt-2 border-t border-[var(--border)] pt-4">
+              <SubtaskList
+                parentTaskId={task.id}
+                subtasks={subtasks}
+                onSubtasksChanged={setSubtasks}
+              />
+            </div>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
