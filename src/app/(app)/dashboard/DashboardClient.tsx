@@ -1,16 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import useSWR from "swr";
 import { TaskList } from "@/components/tasks/TaskList";
 import { NewTaskButton } from "@/components/tasks/NewTaskButton";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import type { TaskWithRelations } from "@/types";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function DashboardClient() {
+  const [showCompleted, setShowCompleted] = useState(false);
+
   const { data: tasks, isLoading: tasksLoading, mutate: mutateTasks } = useSWR<TaskWithRelations[]>(
     "/api/tasks?completed=false",
+    fetcher
+  );
+  const { data: completedTasks, isLoading: completedLoading } = useSWR<TaskWithRelations[]>(
+    showCompleted ? "/api/tasks?completed=true" : null,
     fetcher
   );
   const { data: members = [] } = useSWR("/api/family/members", fetcher, {
@@ -85,6 +92,44 @@ export default function DashboardClient() {
           onCompleted={handleCompleted}
         />
       )}
+
+      {/* Completed tasks toggle */}
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={() => setShowCompleted((v) => !v)}
+          className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        >
+          {showCompleted ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          Voltooide taken
+        </button>
+
+        {showCompleted && (
+          <div className="mt-3">
+            {completedLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
+              </div>
+            ) : completedTasks && completedTasks.length > 0 ? (
+              <TaskList
+                tasks={completedTasks}
+                members={members}
+                lists={lists}
+                labels={labels}
+                isParent={isParent}
+                currentUserId={currentUserId}
+                onUpdated={handleUpdated}
+                onDeleted={handleDeleted}
+                onCompleted={() => {}}
+              />
+            ) : (
+              <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">
+                Geen voltooide taken
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       <NewTaskButton
         members={members}
