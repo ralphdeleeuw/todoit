@@ -1,5 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <rect width="192" height="192" rx="40" fill="#4f46e5"/>
-  <rect x="44" y="44" width="104" height="104" rx="16" fill="#4338ca"/>
-  <polyline points="60,96 84,120 132,72" stroke="white" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Background -->
+  <rect width="192" height="192" rx="38" fill="#4f46e5"/>
+
+  <!-- Mane outer ring -->
+  <circle cx="96" cy="86" r="66" fill="#b45309"/>
+  <!-- Mane inner -->
+  <circle cx="96" cy="86" r="56" fill="#d97706"/>
+
+  <!-- Ears -->
+  <circle cx="50" cy="46" r="20" fill="#b45309"/>
+  <circle cx="142" cy="46" r="20" fill="#b45309"/>
+  <circle cx="50" cy="46" r="12" fill="#fbbf24"/>
+  <circle cx="142" cy="46" r="12" fill="#fbbf24"/>
+
+  <!-- Face -->
+  <circle cx="96" cy="92" r="50" fill="#fde68a"/>
+
+  <!-- Eyes -->
+  <circle cx="76" cy="82" r="9" fill="#451a03"/>
+  <circle cx="116" cy="82" r="9" fill="#451a03"/>
+  <circle cx="79" cy="79" r="3.5" fill="white"/>
+  <circle cx="119" cy="79" r="3.5" fill="white"/>
+
+  <!-- Nose -->
+  <ellipse cx="96" cy="100" rx="8" ry="5.5" fill="#92400e"/>
+
+  <!-- Mouth -->
+  <path d="M84 112 Q96 124 108 112" stroke="#92400e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Checkmark badge -->
+  <circle cx="150" cy="150" r="33" fill="white"/>
+  <circle cx="150" cy="150" r="28" fill="#16a34a"/>
+  <polyline points="137,150 147,161 165,138" stroke="white" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
