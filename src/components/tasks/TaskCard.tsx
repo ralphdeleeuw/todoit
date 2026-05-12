@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import * as Checkbox from "@radix-ui/react-checkbox";
-import { Check, RefreshCw, CalendarDays } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Check, RefreshCw, CalendarDays, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isOverdue } from "@/lib/utils";
 import type { TaskWithRelations } from "@/types";
@@ -66,19 +67,31 @@ export function TaskCard({
 }: TaskCardProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [recurringDialogOpen, setRecurringDialogOpen] = useState(false);
   const isCompleted = !!task.completedAt;
 
-  async function handleComplete(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (isCompleted || completing) return;
+  async function doComplete(permanent: boolean) {
     setCompleting(true);
+    setRecurringDialogOpen(false);
     try {
-      const res = await fetch(`/api/tasks/${task.id}/complete`, { method: "POST" });
-      if (res.ok) {
-        onCompleted(task.id);
-      }
+      const res = await fetch(`/api/tasks/${task.id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ permanent }),
+      });
+      if (res.ok) onCompleted(task.id);
     } finally {
       setCompleting(false);
+    }
+  }
+
+  function handleComplete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (isCompleted || completing) return;
+    if (task.isRecurring) {
+      setRecurringDialogOpen(true);
+    } else {
+      doComplete(false);
     }
   }
 
@@ -204,6 +217,46 @@ export function TaskCard({
         onUpdated={onUpdated}
         onDeleted={onDeleted}
       />
+
+      <Dialog.Root open={recurringDialogOpen} onOpenChange={setRecurringDialogOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content className="fixed z-50 inset-x-0 bottom-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-sm bg-white dark:bg-gray-900 md:rounded-2xl rounded-t-2xl shadow-2xl border border-[var(--border)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+              <Dialog.Title className="text-base font-semibold text-gray-900 dark:text-white">
+                Herhalende taak voltooien
+              </Dialog.Title>
+              <Dialog.Close className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <X className="w-4 h-4" />
+              </Dialog.Close>
+            </div>
+            <div className="p-5 space-y-3">
+              <button
+                type="button"
+                onClick={() => doComplete(false)}
+                className="w-full flex items-start gap-3 p-4 rounded-xl border border-[var(--border)] hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors text-left"
+              >
+                <RefreshCw className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Alleen deze keer</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Volgende herhaling wordt automatisch ingepland</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => doComplete(true)}
+                className="w-full flex items-start gap-3 p-4 rounded-xl border border-[var(--border)] hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors text-left"
+              >
+                <Check className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Permanent voltooien</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Taak stopt — er wordt geen nieuwe herhaling aangemaakt</p>
+                </div>
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }

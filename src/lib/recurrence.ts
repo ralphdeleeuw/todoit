@@ -5,7 +5,8 @@ import type { Task } from "@prisma/client";
 
 export async function completeTaskAndSpawnNext(
   taskId: string,
-  completedByUserId: string
+  completedByUserId: string,
+  permanent = false
 ): Promise<{ completedTask: Task; nextTask: Task | null }> {
   const completedTask = await prisma.task.update({
     where: { id: taskId },
@@ -15,7 +16,7 @@ export async function completeTaskAndSpawnNext(
 
   let nextTask: Task | null = null;
 
-  if (completedTask.isRecurring && completedTask.recurrenceInterval) {
+  if (!permanent && completedTask.isRecurring && completedTask.recurrenceInterval) {
     const base = completedTask.dueDate ?? completedTask.completedAt!;
     const nextDue = addDays(base, completedTask.recurrenceInterval);
 

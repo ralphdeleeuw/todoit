@@ -6,7 +6,7 @@ import { completeTaskAndSpawnNext } from "@/lib/recurrence";
 
 type Ctx = { params: Promise<{ taskId: string }> };
 
-export async function POST(_req: Request, ctx: Ctx) {
+export async function POST(req: Request, ctx: Ctx) {
   try {
     const user = await requireFamily();
     const { taskId } = await ctx.params;
@@ -18,7 +18,15 @@ export async function POST(_req: Request, ctx: Ctx) {
       return NextResponse.json({ error: "Already completed" }, { status: 400 });
     }
 
-    const result = await completeTaskAndSpawnNext(taskId, user.id);
+    let permanent = false;
+    try {
+      const body = await req.json();
+      permanent = !!body?.permanent;
+    } catch {
+      // no body or not JSON — treat as normal completion
+    }
+
+    const result = await completeTaskAndSpawnNext(taskId, user.id, permanent);
     return NextResponse.json(result);
   } catch (e) {
     return apiError(e);
