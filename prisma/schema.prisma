@@ -170,6 +170,10 @@ model Task {
   parentTask         Task?   @relation("RecurrenceChain", fields: [parentTaskId], references: [id])
   childTasks         Task[]  @relation("RecurrenceChain")
 
+  subtaskParentId String?
+  subtaskParent   Task?   @relation("SubtaskChain", fields: [subtaskParentId], references: [id])
+  subtasks        Task[]  @relation("SubtaskChain")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import * as Checkbox from "@radix-ui/react-checkbox";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Check, RefreshCw, CalendarDays, X } from "lucide-react";
+import { Check, RefreshCw, CalendarDays, ListChecks, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isOverdue } from "@/lib/utils";
 import type { TaskWithRelations } from "@/types";
@@ -183,6 +183,14 @@ export function TaskCard({
                   style={{ backgroundColor: task.list.color ?? "#6366f1" }}
                 />
                 {task.list.name}
+              </span>
+            )}
+
+            {/* Subtasks progress */}
+            {task.subtasks.length > 0 && (
+              <span className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                <ListChecks className="w-3 h-3" />
+                {task.subtasks.filter((s) => s.completedAt).length}/{task.subtasks.length}
               </span>
             )}
 
