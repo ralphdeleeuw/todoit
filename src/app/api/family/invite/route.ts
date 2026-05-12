@@ -22,8 +22,12 @@ export async function POST(req: Request) {
     const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host");
     const proto = hdrs.get("x-forwarded-proto") ?? "https";
     const origin =
-      process.env.AUTH_URL?.replace(/\/$/, "") ??
-      process.env.NEXTAUTH_URL?.replace(/\/$/, "") ??
+      process.env.AUTH_URL?.replace(/\/$/, "") ||
+      process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : "") ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
       (host ? `${proto}://${host}` : new URL(req.url).origin);
     const url = `${origin}/join?token=${invite.token}`;
     return NextResponse.json({ token: invite.token, url }, { status: 201 });
