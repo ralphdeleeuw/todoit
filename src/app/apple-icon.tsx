@@ -13,21 +13,33 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+          background: "linear-gradient(135deg, #7c2d12, #1c1917)",
           borderRadius: 36,
           position: "relative",
         }}
       >
-        <div style={{ fontSize: 108, lineHeight: 1, marginTop: -10, display: "flex" }}>🦁</div>
         <div
           style={{
             position: "absolute",
-            bottom: 14,
-            right: 14,
-            width: 56,
-            height: 56,
+            width: 126,
+            height: 126,
             borderRadius: "50%",
-            background: "white",
+            background: "radial-gradient(circle, #f97316 0%, #9a3412 60%, transparent 100%)",
+            display: "flex",
+            top: 20,
+            left: 27,
+          }}
+        />
+        <div style={{ fontSize: 98, lineHeight: 1, zIndex: 1, marginTop: -8, display: "flex" }}>🦁</div>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 10,
+            right: 10,
+            width: 54,
+            height: 54,
+            borderRadius: "50%",
+            background: "#166534",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -35,15 +47,16 @@ export default function AppleIcon() {
         >
           <div
             style={{
-              width: 46,
-              height: 46,
+              width: 42,
+              height: 42,
               borderRadius: "50%",
               background: "#16a34a",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 28,
+              fontSize: 26,
               color: "white",
+              fontWeight: "bold",
             }}
           >
             ✓
