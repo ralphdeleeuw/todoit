@@ -65,7 +65,7 @@ export function TaskForm({
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [dueDate, setDueDate] = useState(initialData?.dueDate ?? "");
   const [assigneeId, setAssigneeId] = useState(initialData?.assigneeId ?? currentUserId);
-  const [listId, setListId] = useState(initialData?.listId ?? "");
+  const [listId, setListId] = useState(initialData?.listId ?? "__none__");
   const [selectedLabels, setSelectedLabels] = useState<string[]>(initialData?.labelIds ?? []);
   const [isRecurring, setIsRecurring] = useState(initialData?.isRecurring ?? false);
   const [recurrenceInterval, setRecurrenceInterval] = useState(
@@ -86,7 +86,7 @@ export function TaskForm({
       description: description.trim(),
       dueDate,
       assigneeId,
-      listId,
+      listId: listId === "__none__" ? "" : listId,
       labelIds: selectedLabels,
       isRecurring,
       recurrenceInterval,
@@ -195,7 +195,7 @@ export function TaskForm({
               <Select.Content className="z-50 overflow-hidden rounded-lg border border-[var(--border)] bg-white dark:bg-gray-800 shadow-lg">
                 <Select.Viewport className="p-1">
                   <Select.Item
-                    value=""
+                    value="__none__"
                     className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 outline-none data-[highlighted]:bg-gray-50 dark:data-[highlighted]:bg-gray-700"
                   >
                     <Select.ItemText>Geen lijst</Select.ItemText>
