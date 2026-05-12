@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { verifyFamily } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { Crown } from "lucide-react";
 import { InviteButton } from "./InviteButton";
+import { RoleToggle } from "./RoleToggle";
 
 export const metadata = { title: "Gezin – Todoit" };
 export const dynamic = "force-dynamic";
@@ -74,12 +74,7 @@ export default async function FamilyPage() {
                   <span className="font-medium text-gray-900 dark:text-white text-sm truncate">
                     {member.name ?? "Naamloos"}
                   </span>
-                  {member.role === "PARENT" && (
-                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-medium">
-                      <Crown className="w-3 h-3" />
-                      Ouder
-                    </span>
-                  )}
+                  <RoleToggle userId={member.id} currentRole={member.role} />
                 </div>
                 <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
                   {member.email}
