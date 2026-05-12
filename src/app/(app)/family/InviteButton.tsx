@@ -16,7 +16,7 @@ export function InviteButton() {
       const res = await fetch("/api/family/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "CHILD" }),
+        body: JSON.stringify({ role: "CHILD", origin: window.location.origin }),
       });
       if (!res.ok) {
         const data = await res.json();
