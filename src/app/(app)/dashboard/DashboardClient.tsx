@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import useSWR from "swr";
 import { Bell, Settings, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -10,19 +10,30 @@ import { SectionHead } from "@/components/arcade/SectionHead";
 import { LevelCard } from "@/components/arcade/LevelCard";
 import { AvatarFilterStrip } from "@/components/arcade/AvatarFilterStrip";
 import { ArcadeFAB } from "@/components/arcade/ArcadeFAB";
-import { NewTaskButton } from "@/components/tasks/NewTaskButton";
-import { TaskDetailSheet } from "@/components/tasks/TaskDetailSheet";
+import { ArcadeNewTaskSheet } from "@/components/arcade/ArcadeNewTaskSheet";
+import { ArcadeTaskDetail } from "@/components/arcade/ArcadeTaskDetail";
+import { LevelUpOverlay } from "@/components/arcade/LevelUpOverlay";
+import { ComboMeter } from "@/components/arcade/ComboMeter";
 
-import { bucketTask, BUCKET_ORDER } from "@/lib/arcade";
-import { calcLevel } from "@/lib/arcade";
+import { bucketTask, BUCKET_ORDER, calcLevel } from "@/lib/arcade";
 import type { TaskWithRelations, ArcadeMember, CompleteResult } from "@/types";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+const MEMBER_COLORS = ["#6366f1", "#ec4899", "#f59e0b", "#10b981"];
 
 export default function DashboardClient() {
   const [filterMemberId, setFilterMemberId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
+
+  // LevelUp state
+  const [levelUpData, setLevelUpData] = useState<{ level: number } | null>(null);
+
+  // Combo tracking
+  const comboTimestamps = useRef<number[]>([]);
+  const comboTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [combo, setCombo] = useState(0);
 
   const {
     data: tasks,
@@ -37,25 +48,19 @@ export default function DashboardClient() {
   );
 
   const { data: lists = [] } = useSWR("/api/lists", fetcher);
-  const { data: labels = [] } = useSWR("/api/labels", fetcher);
   const { data: sessionData } = useSWR("/api/auth/session", fetcher);
 
   const currentUserId: string = sessionData?.user?.id ?? "";
   const isParent: boolean = sessionData?.user?.role === "PARENT";
 
-  // Enrich members with computed level
   const members: ArcadeMember[] = rawMembers.map((m) => ({
     ...m,
     level: calcLevel(m.xp ?? 0),
   }));
 
   const currentMember = members.find((m) => m.id === currentUserId) ?? null;
-
-  // Week rank for current user (sorted by weekXp desc)
   const weekRank = currentMember
-    ? [...members]
-        .sort((a, b) => (b.weekXp ?? 0) - (a.weekXp ?? 0))
-        .findIndex((m) => m.id === currentUserId) + 1
+    ? [...members].sort((a, b) => (b.weekXp ?? 0) - (a.weekXp ?? 0)).findIndex((m) => m.id === currentUserId) + 1
     : undefined;
 
   const activeTasks = (tasks ?? []).filter((t) => !t.completedAt);
@@ -63,16 +68,26 @@ export default function DashboardClient() {
     ? activeTasks.filter((t) => t.assignee?.id === filterMemberId)
     : activeTasks;
 
-  // Group into buckets
   const bucketed = BUCKET_ORDER.reduce<Record<string, TaskWithRelations[]>>(
-    (acc, bucket) => {
-      acc[bucket] = filteredTasks.filter((t) => bucketTask(t.dueDate) === bucket);
-      return acc;
-    },
+    (acc, bucket) => { acc[bucket] = filteredTasks.filter((t) => bucketTask(t.dueDate) === bucket); return acc; },
     {} as Record<string, TaskWithRelations[]>
   );
 
   const filterMember = members.find((m) => m.id === filterMemberId);
+
+  function trackCombo(assigneeId: string) {
+    const now = Date.now();
+    const window = 30_000;
+    comboTimestamps.current = [...comboTimestamps.current, now].filter((t) => now - t < window);
+    const count = comboTimestamps.current.length;
+    setCombo(count);
+
+    if (comboTimer.current) clearTimeout(comboTimer.current);
+    comboTimer.current = setTimeout(() => {
+      setCombo(0);
+      comboTimestamps.current = [];
+    }, 6000);
+  }
 
   const handleCreated = useCallback(
     (task: TaskWithRelations) => {
@@ -83,10 +98,7 @@ export default function DashboardClient() {
 
   const handleUpdated = useCallback(
     (updated: TaskWithRelations) => {
-      mutateTasks(
-        (prev) => prev?.map((t) => (t.id === updated.id ? updated : t)) ?? [],
-        false
-      );
+      mutateTasks((prev) => prev?.map((t) => (t.id === updated.id ? updated : t)) ?? [], false);
     },
     [mutateTasks]
   );
@@ -100,36 +112,28 @@ export default function DashboardClient() {
 
   const handleComplete = useCallback(
     async (task: TaskWithRelations) => {
-      // Optimistic remove
       mutateTasks((prev) => prev?.filter((t) => t.id !== task.id) ?? [], false);
+      trackCombo(task.assigneeId ?? "");
 
       try {
         const res = await fetch(`/api/tasks/${task.id}/complete`, { method: "POST" });
         if (res.ok) {
           const data: CompleteResult = await res.json();
-          // Update member XP in local SWR cache
           mutateMembers(
             (prev) =>
               prev?.map((m) =>
                 m.id === currentUserId
-                  ? {
-                      ...m,
-                      xp: data.xp,
-                      weekXp: data.weekXp,
-                      streak: data.streak,
-                      level: calcLevel(data.xp),
-                    }
+                  ? { ...m, xp: data.xp, weekXp: data.weekXp, streak: data.streak, level: calcLevel(data.xp) }
                   : m
               ) ?? [],
             false
           );
-          // If recurring, a new task was spawned — revalidate
-          if (data.nextTask) {
-            mutateTasks();
+          if (data.levelUp) {
+            setLevelUpData({ level: data.newLevel });
           }
+          if (data.nextTask) mutateTasks();
         }
       } catch {
-        // Re-fetch on error
         mutateTasks();
       }
     },
@@ -141,15 +145,10 @@ export default function DashboardClient() {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(12, 0, 0, 0);
-
       mutateTasks(
-        (prev) =>
-          prev?.map((t) =>
-            t.id === task.id ? { ...t, dueDate: tomorrow } : t
-          ) ?? [],
+        (prev) => prev?.map((t) => (t.id === task.id ? { ...t, dueDate: tomorrow } : t)) ?? [],
         false
       );
-
       await fetch(`/api/tasks/${task.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -170,23 +169,29 @@ export default function DashboardClient() {
   const openTaskCount = activeTasks.length;
 
   return (
-    <div
-      className="min-h-screen pb-32"
-      style={{ background: "var(--arc-bg)" }}
-    >
+    <div className="min-h-screen pb-32" style={{ background: "var(--arc-bg)" }}>
+      {/* Combo meter */}
+      <ComboMeter combo={combo} />
+
+      {/* Level-up overlay */}
+      <LevelUpOverlay
+        show={!!levelUpData}
+        level={levelUpData?.level ?? 1}
+        memberName={currentMember?.name ?? ""}
+        memberImage={currentMember?.image}
+        memberColor={MEMBER_COLORS[members.findIndex((m) => m.id === currentUserId) % MEMBER_COLORS.length]}
+        onDismiss={() => setLevelUpData(null)}
+      />
+
       {/* Header */}
       <header className="flex items-center justify-between px-4 pt-4 pb-2">
         <div>
-          <p className="text-[10px] font-bold tracking-[0.2em] text-[var(--arc-muted)] uppercase">
-            TODOIT
-          </p>
+          <p className="text-[10px] font-bold tracking-[0.2em] text-[var(--arc-muted)] uppercase">TODOIT</p>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-black text-white tracking-tight">Missions</h1>
             {openTaskCount > 0 && (
-              <span
-                className="text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums"
-                style={{ background: "var(--arc-panel-2)", color: "var(--arc-muted)" }}
-              >
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums"
+                style={{ background: "var(--arc-panel-2)", color: "var(--arc-muted)" }}>
                 {openTaskCount}
               </span>
             )}
@@ -203,17 +208,9 @@ export default function DashboardClient() {
         </div>
       </header>
 
-      {/* Level card for current user */}
-      {currentMember && (
-        <LevelCard member={currentMember} weekRank={weekRank} />
-      )}
+      {currentMember && <LevelCard member={currentMember} weekRank={weekRank} />}
 
-      {/* Avatar filter strip */}
-      <AvatarFilterStrip
-        members={members}
-        selectedId={filterMemberId}
-        onSelect={setFilterMemberId}
-      />
+      <AvatarFilterStrip members={members} selectedId={filterMemberId} onSelect={setFilterMemberId} />
 
       {/* Task list */}
       {tasksLoading ? (
@@ -221,13 +218,8 @@ export default function DashboardClient() {
           <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--xp-accent)" }} />
         </div>
       ) : filteredTasks.length === 0 ? (
-        <div
-          className="mx-4 mt-6 p-6 rounded-2xl flex flex-col items-center gap-2 text-center"
-          style={{
-            border: "1.5px dashed var(--arc-border-str)",
-            background: "var(--arc-panel)",
-          }}
-        >
+        <div className="mx-4 mt-6 p-6 rounded-2xl flex flex-col items-center gap-2 text-center"
+          style={{ border: "1.5px dashed var(--arc-border-str)", background: "var(--arc-panel)" }}>
           <span className="text-2xl">🎉</span>
           <p className="text-white font-semibold">
             {filterMember ? `${filterMember.name} is helemaal klaar!` : "Alles gedaan!"}
@@ -258,36 +250,35 @@ export default function DashboardClient() {
         </div>
       )}
 
-      {/* Detail sheet (reuse existing component) */}
+      {/* Arcade task detail sheet */}
       {selectedTask && (
-        <TaskDetailSheet
+        <ArcadeTaskDetail
           task={selectedTask}
           members={members}
-          lists={lists}
-          labels={labels}
           isParent={isParent}
           currentUserId={currentUserId}
           open={!!selectedTask}
           onOpenChange={(open) => { if (!open) setSelectedTask(null); }}
           onUpdated={(updated) => { handleUpdated(updated); setSelectedTask(null); }}
           onDeleted={(id) => { handleDeleted(id); setSelectedTask(null); }}
+          onCompleted={(id) => {
+            const t = activeTasks.find((t) => t.id === id);
+            if (t) handleComplete(t);
+            setSelectedTask(null);
+          }}
         />
       )}
 
-      {/* New task sheet triggered by FAB */}
-      <NewTaskButton
-        members={members}
-        lists={lists}
-        labels={labels}
-        isParent={isParent}
-        currentUserId={currentUserId}
-        onCreated={handleCreated}
-        variant="controlled"
+      {/* Arcade new task sheet */}
+      <ArcadeNewTaskSheet
         open={newTaskOpen}
         onOpenChange={setNewTaskOpen}
+        members={members}
+        lists={lists}
+        currentUserId={currentUserId}
+        onCreated={handleCreated}
       />
 
-      {/* FAB */}
       <ArcadeFAB onClick={() => setNewTaskOpen(true)} />
     </div>
   );
