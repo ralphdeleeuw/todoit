@@ -16,22 +16,30 @@ export async function GET(req: Request) {
     const user = await requireFamily();
     const { searchParams } = new URL(req.url);
 
+    const listId = searchParams.get("listId");
+    const assigneeId = searchParams.get("assigneeId");
+
     const where: Record<string, unknown> = { familyId: user.familyId, subtaskParentId: null };
 
-    if (user.role === "CHILD") {
-      where.OR = [{ assigneeId: user.id }, { createdById: user.id }];
+    if (listId) {
+      // Specific list view — list-level access is assumed (user navigated here intentionally)
+      where.listId = listId;
+    } else {
+      // Visibility-based filtering: tasks on FAMILY/SHARED lists are visible to all;
+      // tasks with no list or on a PRIVATE list are only visible to their assignee/creator.
+      where.OR = [
+        { list: { visibility: { in: ["FAMILY", "SHARED"] } } },
+        { listId: null, OR: [{ assigneeId: user.id }, { createdById: user.id }] },
+        { list: { visibility: "PRIVATE" }, OR: [{ assigneeId: user.id }, { createdById: user.id }] },
+      ];
     }
 
-    const listId = searchParams.get("listId");
-    if (listId) where.listId = listId;
-
-    const assigneeId = searchParams.get("assigneeId");
     if (assigneeId && user.role === "PARENT") where.assigneeId = assigneeId;
 
     const completed = searchParams.get("completed");
     if (completed === "true") {
       where.completedAt = { not: null };
-    } else if (completed !== "true") {
+    } else if (completed === "false") {
       where.completedAt = null;
     }
 

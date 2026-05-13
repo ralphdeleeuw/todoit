@@ -32,14 +32,35 @@ export function ArcadeTaskDetail({
   const [completing, setCompleting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [assigneeId, setAssigneeId] = useState<string | null>(task.assigneeId ?? null);
+  const [reassigning, setReassigning] = useState(false);
 
   const color = listColor(task.list?.color);
   const dueStr = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString("nl-NL", { day: "numeric", month: "long" })
     : null;
-  const assignee = members.find((m) => m.id === task.assigneeId);
+  const assignee = members.find((m) => m.id === assigneeId);
   const assigneeInitial = (assignee?.name ?? "?")[0].toUpperCase();
-  const assigneeColor = PILL_COLORS[members.findIndex((m) => m.id === task.assigneeId) % PILL_COLORS.length] ?? "#6366f1";
+  const assigneeColor = PILL_COLORS[members.findIndex((m) => m.id === assigneeId) % PILL_COLORS.length] ?? "#6366f1";
+
+  async function handleReassign(newAssigneeId: string) {
+    if (newAssigneeId === assigneeId || reassigning) return;
+    setReassigning(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assigneeId: newAssigneeId }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setAssigneeId(newAssigneeId);
+        onUpdated(updated);
+      }
+    } finally {
+      setReassigning(false);
+    }
+  }
 
   const doneSubs = subtasks.filter((s) => s.completedAt).length;
   const subPct = subtasks.length > 0 ? Math.round((doneSubs / subtasks.length) * 100) : 0;
@@ -171,21 +192,50 @@ export function ArcadeTaskDetail({
 
             {/* Assignee */}
             <div
-              className="mt-3 flex items-center gap-2 pt-3"
+              className="mt-3 pt-3"
               style={{ borderTop: "1px solid var(--arc-border)" }}
             >
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white overflow-hidden"
-                style={{ background: assigneeColor }}
-              >
-                {assignee?.image
-                  ? <img src={assignee.image} alt="" className="w-full h-full object-cover rounded-full" />
-                  : assigneeInitial
-                }
+              <div className="flex items-center gap-2 mb-2">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white overflow-hidden shrink-0"
+                  style={{ background: assigneeColor }}
+                >
+                  {assignee?.image
+                    ? <img src={assignee.image} alt="" className="w-full h-full object-cover rounded-full" />
+                    : assigneeInitial
+                  }
+                </div>
+                <span className="text-xs text-[var(--arc-muted)]">
+                  <span className="text-white font-medium">{assignee?.name ?? "Iemand"}</span> doet deze taak
+                </span>
+                {reassigning && <span className="text-[10px] text-[var(--arc-muted)] ml-auto">opslaan…</span>}
               </div>
-              <span className="text-xs text-[var(--arc-muted)]">
-                <span className="text-white font-medium">{assignee?.name ?? "Iemand"}</span> doet deze taak
-              </span>
+              {isParent && members.length > 1 && (
+                <div className="flex gap-2 flex-wrap">
+                  {members.map((m, i) => {
+                    const mColor = PILL_COLORS[i % PILL_COLORS.length];
+                    const mInitial = (m.name ?? "?")[0].toUpperCase();
+                    const isActive = m.id === assigneeId;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => handleReassign(m.id)}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-medium transition-all active:scale-95"
+                        style={isActive
+                          ? { background: `${mColor}33`, border: `1.5px solid ${mColor}`, color: "white" }
+                          : { background: "var(--arc-panel-2)", border: "1px solid var(--arc-border)", color: "var(--arc-muted)" }
+                        }
+                      >
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white overflow-hidden shrink-0" style={{ background: mColor }}>
+                          {m.image ? <img src={m.image} alt="" className="w-full h-full object-cover rounded-full" /> : mInitial}
+                        </div>
+                        {m.name?.split(" ")[0]}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
