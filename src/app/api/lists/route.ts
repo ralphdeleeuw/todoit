@@ -30,7 +30,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const user = await requireFamily();
-    const { name, color, visibility, memberIds } = await req.json();
+    const { name, color, visibility, memberIds, points } = await req.json();
     if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
 
     const vis: string = ["PRIVATE", "FAMILY", "SHARED"].includes(visibility)
@@ -41,6 +41,7 @@ export async function POST(req: Request) {
       data: {
         name: name.trim(),
         color: color ?? null,
+        points: typeof points === "number" ? Math.max(0, points) : 10,
         familyId: user.familyId,
         ownerId: user.id,
         visibility: vis as "PRIVATE" | "FAMILY" | "SHARED",

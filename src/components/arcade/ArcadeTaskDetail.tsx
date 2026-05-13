@@ -186,7 +186,7 @@ export function ArcadeTaskDetail({
                 </div>
               </div>
               <span className="text-[11px] font-bold px-2 py-1 rounded-full shrink-0" style={{ background: "#facc1522", color: "#facc15" }}>
-                💎 {task.points}
+                💎 {task.list?.points ?? 0}
               </span>
             </div>
 

@@ -37,6 +37,7 @@ export default async function ListsPage() {
     id: l.id,
     name: l.name,
     color: l.color,
+    points: l.points,
     visibility: l.visibility,
     ownerId: l.ownerId,
     memberIds: l.members.map((m) => m.userId),

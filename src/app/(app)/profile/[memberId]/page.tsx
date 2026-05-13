@@ -26,7 +26,7 @@ export default async function ProfilePage({ params }: Params) {
           where: { completedAt: { not: null } },
           orderBy: { completedAt: "desc" },
           take: 5,
-          include: { list: { select: { name: true, color: true } } },
+          include: { list: { select: { name: true, color: true, points: true } } },
         },
       },
     }),
@@ -154,7 +154,7 @@ export default async function ProfilePage({ params }: Params) {
                     {task.list && <p className="text-[10px] text-[var(--arc-muted)]">{task.list.name}</p>}
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-[10px] font-bold" style={{ color: "var(--gold)" }}>💎 {task.points}</div>
+                    <div className="text-[10px] font-bold" style={{ color: "var(--gold)" }}>💎 {task.list?.points ?? 0}</div>
                     <div className="text-[9px] text-[var(--arc-muted-deep)]">{completedStr}</div>
                   </div>
                 </div>
