@@ -13,7 +13,10 @@ export default async function ListsPage() {
   const [allLists, members] = await Promise.all([
     prisma.taskList.findMany({
       where: { familyId },
-      include: { members: { select: { userId: true } } },
+      include: {
+        members: { select: { userId: true } },
+        _count: { select: { tasks: { where: { completedAt: null } } } },
+      },
       orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
@@ -37,6 +40,7 @@ export default async function ListsPage() {
     visibility: l.visibility,
     ownerId: l.ownerId,
     memberIds: l.members.map((m) => m.userId),
+    taskCount: l._count.tasks,
   }));
 
   return (
