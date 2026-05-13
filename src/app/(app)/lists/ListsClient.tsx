@@ -270,7 +270,7 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
                   <span className="text-3xl mb-2">{emoji}</span>
                   <p className="font-bold text-white text-sm leading-tight truncate">{list.name}</p>
                   <p className="text-[10px] mt-1" style={{ color: "var(--arc-muted)" }}>
-                    {list.taskCount} {list.taskCount === 1 ? "missie" : "missies"}
+                    {list.taskCount} {list.taskCount === 1 ? "taak" : "taken"}
                   </p>
                 </Link>
                 {canManage(list) && (

@@ -108,7 +108,7 @@ export default async function FamilyPage() {
               {/* Task count */}
               <div className="text-right shrink-0">
                 <div className="text-lg font-black text-white tabular-nums">{member._count.assignedTasks}</div>
-                <div className="text-[10px] text-[var(--arc-muted)]">missies</div>
+                <div className="text-[10px] text-[var(--arc-muted)]">taken</div>
               </div>
             </Link>
           );

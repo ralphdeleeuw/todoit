@@ -6,7 +6,7 @@ import { Home, List, Trophy, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Missions", icon: Home },
+  { href: "/dashboard", label: "Taken", icon: Home },
   { href: "/lists",     label: "Lijsten",  icon: List },
   { href: "/score",     label: "Top 4",    icon: Trophy },
   { href: "/family",    label: "Squad",    icon: Users },

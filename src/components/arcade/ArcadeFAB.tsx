@@ -11,7 +11,7 @@ export function ArcadeFAB({ onClick }: ArcadeFABProps) {
     <button
       type="button"
       onClick={onClick}
-      aria-label="Nieuwe missie"
+      aria-label="Nieuwe taak"
       className="fixed z-30 flex items-center justify-center rounded-full text-white transition-transform active:scale-95"
       style={{
         width: 60,
