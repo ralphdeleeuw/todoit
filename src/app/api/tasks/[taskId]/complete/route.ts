@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireFamily, apiError } from "@/lib/auth-helpers";
 import { canEditTask } from "@/lib/permissions";
 import { completeTaskAndSpawnNext } from "@/lib/recurrence";
+import { calcLevel, levelDidCross } from "@/lib/arcade";
 
 type Ctx = { params: Promise<{ taskId: string }> };
 
@@ -23,11 +24,61 @@ export async function POST(req: Request, ctx: Ctx) {
       const body = await req.json();
       permanent = !!body?.permanent;
     } catch {
-      // no body or not JSON — treat as normal completion
+      // no body or not JSON
     }
 
     const result = await completeTaskAndSpawnNext(taskId, user.id, permanent);
-    return NextResponse.json(result);
+    const points = existing.points ?? 10;
+
+    // Award XP and update streak
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+    const prevXp = dbUser?.xp ?? 0;
+    const prevStreak = dbUser?.streak ?? 0;
+    const lastActivity = dbUser?.lastActivityDate
+      ? new Date(dbUser.lastActivityDate)
+      : null;
+    lastActivity?.setHours(0, 0, 0, 0);
+
+    const lastActivityTime = lastActivity?.getTime();
+    const todayTime = today.getTime();
+    const yesterdayTime = todayTime - 86_400_000;
+
+    let newStreak: number;
+    if (!lastActivity) {
+      newStreak = 1;
+    } else if (lastActivityTime === todayTime) {
+      newStreak = prevStreak; // already counted today
+    } else if (lastActivityTime === yesterdayTime) {
+      newStreak = prevStreak + 1; // consecutive day
+    } else {
+      newStreak = 1; // streak broken
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        xp: { increment: points },
+        weekXp: { increment: points },
+        streak: newStreak,
+        lastActivityDate: new Date(),
+      },
+    });
+
+    const newXp = updatedUser.xp;
+    const levelUp = levelDidCross(prevXp, newXp);
+    const newLevel = calcLevel(newXp);
+
+    return NextResponse.json({
+      ...result,
+      xp: newXp,
+      weekXp: updatedUser.weekXp,
+      streak: updatedUser.streak,
+      levelUp,
+      newLevel,
+    });
   } catch (e) {
     return apiError(e);
   }

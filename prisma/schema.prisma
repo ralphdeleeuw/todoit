@@ -35,6 +35,10 @@ model User {
   emailVerified DateTime?
   image         String?
   dailyReminderEnabled Boolean @default(true)
+  xp            Int        @default(0)
+  weekXp        Int        @default(0)
+  streak        Int        @default(0)
+  lastActivityDate DateTime?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -151,6 +155,7 @@ model Task {
   dueDate     DateTime?
   completedAt DateTime?
   reminderAt  DateTime?
+  points      Int       @default(10)
 
   familyId String
   family   Family    @relation(fields: [familyId], references: [id])

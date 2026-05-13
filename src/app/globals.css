@@ -17,6 +17,23 @@
   --destructive: #ef4444;
   --success: #22c55e;
   --warning: #f97316;
+
+  /* ── Arcade / gamification tokens ── */
+  --gold:             #facc15;
+  --xp-accent:        #06d6c4;
+  --combo-warn:       #f59e0b;
+  --combo-fire:       #ef4444;
+
+  --arc-bg:           #08081a;
+  --arc-panel:        #15142e;
+  --arc-panel-2:      #1d1c3d;
+  --arc-border:       rgba(255,255,255,0.07);
+  --arc-border-str:   rgba(255,255,255,0.12);
+  --arc-muted:        #8e8eb6;
+  --arc-muted-deep:   #5d5d7a;
+
+  --accent-primary:     #7c3aed;
+  --accent-primary-hot: #c026d3;
 }
 
 @theme inline {
@@ -29,6 +46,14 @@
   --color-border: var(--border);
   --color-ring: var(--ring);
   --color-destructive: var(--destructive);
+
+  --color-gold: var(--gold);
+  --color-xp-accent: var(--xp-accent);
+  --color-arc-bg: var(--arc-bg);
+  --color-arc-panel: var(--arc-panel);
+  --color-arc-panel-2: var(--arc-panel-2);
+  --color-arc-muted: var(--arc-muted);
+  --color-accent-primary: var(--accent-primary);
 }
 
 @media (prefers-color-scheme: dark) {

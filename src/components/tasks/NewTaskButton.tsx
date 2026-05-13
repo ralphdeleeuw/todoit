@@ -32,7 +32,10 @@ interface NewTaskButtonProps {
   currentUserId: string;
   defaultListId?: string;
   onCreated: (task: TaskWithRelations) => void;
-  variant?: "fab" | "button";
+  variant?: "fab" | "button" | "controlled";
+  /** When variant="controlled", pass open state from parent */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function NewTaskButton({
@@ -44,8 +47,15 @@ export function NewTaskButton({
   defaultListId,
   onCreated,
   variant = "button",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: NewTaskButtonProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = variant === "controlled";
+  const open = isControlled ? (controlledOpen ?? false) : internalOpen;
+  const setOpen = isControlled
+    ? (controlledOnOpenChange ?? setInternalOpen)
+    : setInternalOpen;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,22 +94,24 @@ export function NewTaskButton({
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        {variant === "fab" ? (
-          <button
-            type="button"
-            className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-30 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all active:scale-95"
-            aria-label="Nieuwe taak"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        ) : (
-          <button type="button" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm hover:shadow">
-            <Plus className="w-4 h-4" />
-            Nieuwe taak
-          </button>
-        )}
-      </Dialog.Trigger>
+      {!isControlled && (
+        <Dialog.Trigger asChild>
+          {variant === "fab" ? (
+            <button
+              type="button"
+              className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-30 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all active:scale-95"
+              aria-label="Nieuwe taak"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+          ) : (
+            <button type="button" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm hover:shadow">
+              <Plus className="w-4 h-4" />
+              Nieuwe taak
+            </button>
+          )}
+        </Dialog.Trigger>
+      )}
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
