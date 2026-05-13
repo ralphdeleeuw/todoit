@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, Lock, Users, Globe, Check, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -391,23 +392,28 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
                   />
                 </div>
               ) : (
-                <div className="flex items-center gap-4 px-4 py-3">
-                  <span
-                    className="w-3 h-3 rounded-full shrink-0"
-                    style={{ backgroundColor: list.color ?? "#6366f1" }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {list.name}
-                    </p>
-                    <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-                      {visibilityIcon[list.visibility]}
-                      <span>{visibilityLabel[list.visibility]}</span>
-                      {list.visibility === "SHARED" && list.memberIds.length > 0 && (
-                        <span>· {memberNamesFor(list)}</span>
-                      )}
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <Link
+                    href={`/list/${list.id}`}
+                    className="flex items-center gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+                  >
+                    <span
+                      className="w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: list.color ?? "#6366f1" }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {list.name}
+                      </p>
+                      <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                        {visibilityIcon[list.visibility]}
+                        <span>{visibilityLabel[list.visibility]}</span>
+                        {list.visibility === "SHARED" && list.memberIds.length > 0 && (
+                          <span>· {memberNamesFor(list)}</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                   {canManage(list) && (
                     <div className="flex items-center gap-1 shrink-0">
                       <button
