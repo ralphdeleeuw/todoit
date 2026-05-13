@@ -26,3 +26,28 @@ export type SessionUser = {
   familyId?: string | null;
   role?: FamilyRole;
 };
+
+// ── Arcade types ──────────────────────────────────────────────────────────────
+
+export type ArcadeMember = {
+  id: string;
+  name: string | null;
+  email?: string | null;
+  image: string | null;
+  role: FamilyRole;
+  xp: number;
+  weekXp: number;
+  streak: number;
+  level: number;
+};
+
+export type CompleteResult = {
+  completedTask: Task;
+  nextTask: Task | null;
+  xp: number;
+  weekXp: number;
+  streak: number;
+  levelUp: boolean;
+  newLevel: number;
+};
+

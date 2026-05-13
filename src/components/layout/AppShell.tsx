@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Home, List, Users, Settings, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ArcadeBottomNav } from "@/components/arcade/ArcadeBottomNav";
 import type { SessionUser } from "@/types";
 
 interface AppShellProps {
@@ -114,54 +115,16 @@ export function AppShell({ children, user, lists }: AppShellProps) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile top header */}
-        <header className="md:hidden sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 border-b border-[var(--border)]">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600 text-white">
-              <CheckSquare className="w-4 h-4" />
-            </div>
-            <span className="font-bold text-gray-900 dark:text-white">Todoit</span>
-          </div>
-          {user.image ? (
-            <img
-              src={user.image}
-              alt={user.name ?? ""}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm font-medium">
-              {(user.name ?? user.email ?? "?")[0].toUpperCase()}
-            </div>
-          )}
-        </header>
-
-        {/* Page content */}
-        <main className="flex-1 pb-20 md:pb-0 overflow-y-auto">
+        {/* Page content — pb-28 on mobile leaves room for ArcadeBottomNav */}
+        <main className="flex-1 pb-28 md:pb-0 overflow-y-auto">
           {children}
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white dark:bg-gray-900 border-t border-[var(--border)] flex">
-        {items.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors",
-                active
-                  ? "text-indigo-600 dark:text-indigo-400"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              )}
-            >
-              <Icon className="w-5 h-5" />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Arcade bottom nav (mobile only) */}
+      <div className="md:hidden">
+        <ArcadeBottomNav />
+      </div>
     </div>
   );
 }

@@ -7,7 +7,7 @@ export async function GET() {
     const user = await requireFamily();
     const members = await prisma.user.findMany({
       where: { familyId: user.familyId },
-      select: { id: true, name: true, image: true, role: true },
+      select: { id: true, name: true, image: true, role: true, xp: true, weekXp: true, streak: true },
       orderBy: { name: "asc" },
     });
     return NextResponse.json(members);
