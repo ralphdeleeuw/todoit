@@ -34,12 +34,33 @@ export function ArcadeTaskDetail({
   const [error, setError] = useState<string | null>(null);
   const [assigneeId, setAssigneeId] = useState<string | null>(task.assigneeId ?? null);
   const [reassigning, setReassigning] = useState(false);
+  const [currentList, setCurrentList] = useState(task.list);
+  const [removingFromList, setRemovingFromList] = useState(false);
 
-  const color = listColor(task.list?.color);
+  const color = listColor(currentList?.color);
   const dueStr = task.dueDate
     ? new Date(task.dueDate).toLocaleDateString("nl-NL", { day: "numeric", month: "long" })
     : null;
   const assignee = members.find((m) => m.id === assigneeId);
+
+  async function handleRemoveFromList() {
+    if (removingFromList) return;
+    setRemovingFromList(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listId: null }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setCurrentList(null);
+        onUpdated(updated);
+      }
+    } finally {
+      setRemovingFromList(false);
+    }
+  }
   const assigneeInitial = (assignee?.name ?? "?")[0].toUpperCase();
   const assigneeColor = PILL_COLORS[members.findIndex((m) => m.id === assigneeId) % PILL_COLORS.length] ?? "#6366f1";
 
@@ -172,9 +193,18 @@ export function ArcadeTaskDetail({
                   {task.title.replace(/^\p{Emoji}\s*/u, "")}
                 </p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  {task.list && (
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: `${color}22`, color }}>
-                      {task.list.name}
+                  {currentList && (
+                    <span className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: `${color}22`, color }}>
+                      {currentList.name}
+                      <button
+                        type="button"
+                        onClick={handleRemoveFromList}
+                        disabled={removingFromList}
+                        className="opacity-60 hover:opacity-100 transition-opacity leading-none"
+                        title="Verwijder uit lijst"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
                     </span>
                   )}
                   {dueStr && (
@@ -185,9 +215,11 @@ export function ArcadeTaskDetail({
                   )}
                 </div>
               </div>
-              <span className="text-[11px] font-bold px-2 py-1 rounded-full shrink-0" style={{ background: "#facc1522", color: "#facc15" }}>
-                💎 {task.list?.points ?? 0}
-              </span>
+              {(currentList?.points ?? 0) > 0 && (
+                <span className="text-[11px] font-bold px-2 py-1 rounded-full shrink-0" style={{ background: "#facc1522", color: "#facc15" }}>
+                  💎 {currentList!.points}
+                </span>
+              )}
             </div>
 
             {/* Assignee */}
