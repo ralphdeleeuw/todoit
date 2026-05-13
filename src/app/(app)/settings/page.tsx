@@ -1,5 +1,6 @@
 import { getFullUser } from "@/lib/dal";
 import { PushSubscribeButton } from "@/components/notifications/PushSubscribeButton";
+import { DailyReminderToggle } from "./DailyReminderToggle";
 import { SignOutButton } from "./SignOutButton";
 
 export const metadata = { title: "Instellingen – Todoit" };
@@ -48,11 +49,16 @@ export default async function SettingsPage() {
         <h2 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
           Meldingen
         </h2>
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-[var(--border)] p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Ontvang meldingen op dit apparaat wanneer een taak aan jou is toegewezen of bijna vervalt.
-          </p>
-          <PushSubscribeButton />
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-[var(--border)] p-4 space-y-4">
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Ontvang meldingen op dit apparaat wanneer een taak aan jou is toegewezen, een herinnering afloopt of taken bijna vervallen.
+            </p>
+            <PushSubscribeButton />
+          </div>
+          <div className="border-t border-[var(--border)] pt-4">
+            <DailyReminderToggle initialEnabled={user.dailyReminderEnabled} />
+          </div>
         </div>
       </section>
 

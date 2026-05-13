@@ -45,6 +45,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
         title: body.title ?? undefined,
         description: body.description ?? undefined,
         dueDate: body.dueDate !== undefined ? (body.dueDate ? new Date(body.dueDate) : null) : undefined,
+        reminderAt: body.reminderAt !== undefined ? (body.reminderAt ? new Date(body.reminderAt) : null) : undefined,
         listId: body.listId !== undefined ? body.listId : undefined,
         assigneeId: canAssignToOthers(user) && body.assigneeId !== undefined ? body.assigneeId : undefined,
         isRecurring: body.isRecurring ?? undefined,
