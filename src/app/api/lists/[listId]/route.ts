@@ -21,7 +21,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
       return NextResponse.json({ error: "Geen toegang" }, { status: 403 });
     }
 
-    const { name, color, visibility, memberIds } = await req.json();
+    const { name, color, visibility, memberIds, points } = await req.json();
     const vis = ["PRIVATE", "FAMILY", "SHARED"].includes(visibility) ? visibility : undefined;
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -42,6 +42,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
           ...(name != null ? { name } : {}),
           ...(color !== undefined ? { color: color || null } : {}),
           ...(vis ? { visibility: vis as "PRIVATE" | "FAMILY" | "SHARED" } : {}),
+          ...(typeof points === "number" ? { points: Math.max(0, points) } : {}),
         },
         include: { members: { select: { userId: true } } },
       });

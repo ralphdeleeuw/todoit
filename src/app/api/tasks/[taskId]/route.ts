@@ -7,7 +7,7 @@ import { sendPushToUser } from "@/lib/push";
 const taskInclude = {
   assignee: { select: { id: true, name: true, image: true } },
   createdBy: { select: { id: true, name: true } },
-  list: { select: { id: true, name: true, color: true } },
+  list: { select: { id: true, name: true, color: true, points: true } },
   labels: { include: { label: { select: { id: true, name: true, color: true } } } },
   subtasks: { select: { id: true, title: true, completedAt: true } },
 } as const;

@@ -9,7 +9,7 @@ import type { TaskWithRelations } from "@/types";
 const EMOJIS = ["📋", "🧹", "🔧", "📚", "🏕️", "✨", "🛒", "🍳", "🌿", "💪", "🎯", "⭐"];
 
 interface Member { id: string; name: string | null; image: string | null; }
-interface ListItem { id: string; name: string; color: string | null; }
+interface ListItem { id: string; name: string; color: string | null; points?: number; }
 
 interface ArcadeNewTaskSheetProps {
   open: boolean;
@@ -58,7 +58,7 @@ export function ArcadeNewTaskSheet({
   const [error, setError] = useState<string | null>(null);
 
   const selectedList = lists.find((l) => l.id === listId);
-  const pointsPreview = 10;
+  const pointsPreview = selectedList?.points ?? 0;
 
   function reset() {
     setTitle(""); setWhen("today"); setAssigneeId(currentUserId);

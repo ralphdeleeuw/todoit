@@ -26,7 +26,7 @@ export default async function ScorePage() {
       completedAt: { gte: sevenDaysAgo },
       assigneeId: { not: null },
     },
-    select: { assigneeId: true, completedAt: true, points: true },
+    select: { assigneeId: true, completedAt: true, list: { select: { points: true } } },
   });
 
   // Build 7-day history: [{ date, perMember: { [memberId]: xp } }]
@@ -42,7 +42,7 @@ export default async function ScorePage() {
       const td = new Date(t.completedAt);
       td.setHours(0, 0, 0, 0);
       if (td.getTime() === d.getTime()) {
-        data[t.assigneeId] = (data[t.assigneeId] ?? 0) + (t.points ?? 0);
+        data[t.assigneeId] = (data[t.assigneeId] ?? 0) + (t.list?.points ?? 0);
       }
     }
     days.push({ label, data });

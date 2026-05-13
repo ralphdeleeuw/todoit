@@ -116,6 +116,7 @@ model TaskList {
   id         String         @id @default(cuid())
   name       String
   color      String?
+  points     Int            @default(10)
   familyId   String
   family     Family         @relation(fields: [familyId], references: [id])
   ownerId    String?
@@ -155,7 +156,6 @@ model Task {
   dueDate     DateTime?
   completedAt DateTime?
   reminderAt  DateTime?
-  points      Int       @default(10)
 
   familyId String
   family   Family    @relation(fields: [familyId], references: [id])

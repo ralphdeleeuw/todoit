@@ -117,7 +117,7 @@ export function MissionRow({
     if (completing) return;
     setCompleting(true);
     navigator.vibrate?.(30);
-    setFloater(`+${task.points} XP`);
+    setFloater(`+${task.list?.points ?? 0} XP`);
     setTimeout(() => {
       onComplete();
     }, 600);
@@ -257,7 +257,7 @@ export function MissionRow({
               className="text-[11px] font-bold px-2 py-1 rounded-full tabular-nums"
               style={{ background: "#facc1522", color: "#facc15" }}
             >
-              💎 {task.points}
+              💎 {task.list?.points ?? 0}
             </span>
             <div
               className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[10px] font-bold text-white overflow-hidden"
