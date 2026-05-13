@@ -31,11 +31,12 @@ export function levelDidCross(prevXp: number, nextXp: number): boolean {
   return calcLevel(nextXp) > calcLevel(prevXp);
 }
 
-export function bucketTask(dueDate: Date | null | undefined): TaskBucket {
+export function bucketTask(dueDate: Date | string | null | undefined): TaskBucket {
   if (!dueDate) return "later";
+  const due = dueDate instanceof Date ? dueDate : new Date(dueDate);
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dueStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+  const dueStart = new Date(due.getFullYear(), due.getMonth(), due.getDate());
   const diffDays = Math.round(
     (dueStart.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24)
   );
