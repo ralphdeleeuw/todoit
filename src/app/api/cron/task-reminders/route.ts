@@ -9,13 +9,13 @@ export async function GET(req: Request) {
   }
 
   const now = new Date();
-  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+  // Send reminders for tasks whose reminderAt has passed (up to 25h ago to avoid gaps)
+  const since = new Date(now.getTime() - 25 * 60 * 60 * 1000);
 
-  // Find tasks whose reminder is due in the past 5 minutes and not yet sent
   const tasks = await prisma.task.findMany({
     where: {
       completedAt: null,
-      reminderAt: { gte: fiveMinutesAgo, lte: now },
+      reminderAt: { gte: since, lte: now },
       assigneeId: { not: null },
     },
   });
@@ -27,7 +27,6 @@ export async function GET(req: Request) {
         body: task.title,
         url: "/dashboard",
       });
-      // Clear the reminderAt so it won't fire again
       await prisma.task.update({
         where: { id: task.id },
         data: { reminderAt: null },

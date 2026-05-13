@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/task-reminders",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }
