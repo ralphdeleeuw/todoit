@@ -60,6 +60,7 @@ export function NewTaskButton({
           title: data.title,
           description: data.description || null,
           dueDate: data.dueDate || null,
+          reminderAt: data.reminderAt || null,
           assigneeId: data.assigneeId || null,
           listId: data.listId || defaultListId || null,
           labelIds: data.labelIds,

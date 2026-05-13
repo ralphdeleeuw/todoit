@@ -34,6 +34,7 @@ model User {
   email         String     @unique
   emailVerified DateTime?
   image         String?
+  dailyReminderEnabled Boolean @default(true)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -149,6 +150,7 @@ model Task {
   description String?   @db.Text
   dueDate     DateTime?
   completedAt DateTime?
+  reminderAt  DateTime?
 
   familyId String
   family   Family    @relation(fields: [familyId], references: [id])

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import * as Label from "@radix-ui/react-label";
 import * as Select from "@radix-ui/react-select";
-import { ChevronDown, RefreshCw } from "lucide-react";
+import { ChevronDown, RefreshCw, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TaskWithRelations } from "@/types";
 
@@ -29,6 +29,7 @@ export interface TaskFormData {
   title: string;
   description: string;
   dueDate: string;
+  reminderAt: string;
   assigneeId: string;
   listId: string;
   labelIds: string[];
@@ -64,6 +65,7 @@ export function TaskForm({
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [dueDate, setDueDate] = useState(initialData?.dueDate ?? "");
+  const [reminderAt, setReminderAt] = useState(initialData?.reminderAt ?? "");
   const [assigneeId, setAssigneeId] = useState(initialData?.assigneeId ?? currentUserId);
   const [listId, setListId] = useState(initialData?.listId ?? "__none__");
   const [selectedLabels, setSelectedLabels] = useState<string[]>(initialData?.labelIds ?? []);
@@ -85,6 +87,7 @@ export function TaskForm({
       title: title.trim(),
       description: description.trim(),
       dueDate,
+      reminderAt,
       assigneeId,
       listId: listId === "__none__" ? "" : listId,
       labelIds: selectedLabels,
@@ -177,6 +180,25 @@ export function TaskForm({
             </Select.Root>
           </div>
         )}
+      </div>
+
+      <div>
+        <Label.Root
+          htmlFor="task-reminder"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
+          <span className="flex items-center gap-1.5">
+            <Bell className="w-3.5 h-3.5" />
+            Herinnering
+          </span>
+        </Label.Root>
+        <input
+          id="task-reminder"
+          type="datetime-local"
+          value={reminderAt}
+          onChange={(e) => setReminderAt(e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition"
+        />
       </div>
 
       {lists.length > 0 && (

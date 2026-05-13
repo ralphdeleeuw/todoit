@@ -59,6 +59,7 @@ export async function POST(req: Request) {
         title: body.title,
         description: body.description ?? null,
         dueDate: body.dueDate ? new Date(body.dueDate) : null,
+        reminderAt: body.reminderAt ? new Date(body.reminderAt) : null,
         familyId: user.familyId,
         listId: body.listId ?? null,
         assigneeId,
