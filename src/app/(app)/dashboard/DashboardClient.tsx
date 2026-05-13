@@ -188,7 +188,7 @@ export default function DashboardClient() {
         <div>
           <p className="text-[10px] font-bold tracking-[0.2em] text-[var(--arc-muted)] uppercase">TODOIT</p>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black text-white tracking-tight">Missions</h1>
+            <h1 className="text-xl font-black text-white tracking-tight">Taken</h1>
             {openTaskCount > 0 && (
               <span className="text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums"
                 style={{ background: "var(--arc-panel-2)", color: "var(--arc-muted)" }}>
@@ -224,7 +224,7 @@ export default function DashboardClient() {
           <p className="text-white font-semibold">
             {filterMember ? `${filterMember.name} is helemaal klaar!` : "Alles gedaan!"}
           </p>
-          <p className="text-[var(--arc-muted)] text-xs">Geen openstaande missies</p>
+          <p className="text-[var(--arc-muted)] text-xs">Geen openstaande taken</p>
         </div>
       ) : (
         <div className="px-4">
