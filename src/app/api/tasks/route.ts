@@ -43,10 +43,14 @@ export async function GET(req: Request) {
       where.completedAt = null;
     }
 
+    const takeParam = searchParams.get("take");
+    const take = takeParam ? parseInt(takeParam, 10) : undefined;
+
     const tasks = await prisma.task.findMany({
       where,
       include: taskInclude,
-      orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
+      orderBy: [{ completedAt: "desc" }, { dueDate: "asc" }, { createdAt: "desc" }],
+      ...(take ? { take } : {}),
     });
 
     return NextResponse.json(tasks);

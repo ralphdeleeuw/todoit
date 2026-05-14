@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import useSWR from "swr";
-import { Bell, Settings, Loader2 } from "lucide-react";
+import { Bell, Settings, Loader2, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import Link from "next/link";
 
 import { MissionRow } from "@/components/arcade/MissionRow";
@@ -22,10 +22,23 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 const MEMBER_COLORS = ["#6366f1", "#ec4899", "#f59e0b", "#10b981"];
 
+interface UndoToast {
+  task: TaskWithRelations;
+  timeoutId: ReturnType<typeof setTimeout>;
+  completePromise: Promise<CompleteResult | null>;
+  completed: boolean;
+}
+
 export default function DashboardClient() {
   const [filterMemberId, setFilterMemberId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  // Undo toast
+  const [undoToast, setUndoToast] = useState<{ task: TaskWithRelations; remaining: number } | null>(null);
+  const undoRef = useRef<UndoToast | null>(null);
+  const undoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // LevelUp state
   const [levelUpData, setLevelUpData] = useState<{ level: number } | null>(null);
@@ -40,6 +53,15 @@ export default function DashboardClient() {
     isLoading: tasksLoading,
     mutate: mutateTasks,
   } = useSWR<TaskWithRelations[]>("/api/tasks?completed=false", fetcher);
+
+  const {
+    data: completedTasks,
+    isLoading: completedLoading,
+    mutate: mutateCompleted,
+  } = useSWR<TaskWithRelations[]>(
+    showCompleted ? "/api/tasks?completed=true&take=30" : null,
+    fetcher
+  );
 
   const { data: rawMembers = [], mutate: mutateMembers } = useSWR<ArcadeMember[]>(
     "/api/family/members",
@@ -89,6 +111,102 @@ export default function DashboardClient() {
     }, 6000);
   }
 
+  function clearUndoToast() {
+    if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
+    undoIntervalRef.current = null;
+    undoRef.current = null;
+    setUndoToast(null);
+  }
+
+  function startUndoToast(task: TaskWithRelations, completePromise: Promise<CompleteResult | null>) {
+    // Clear any existing toast
+    if (undoRef.current) {
+      clearTimeout(undoRef.current.timeoutId);
+      clearUndoToast();
+    }
+
+    const DURATION = 5000;
+    const timeoutId = setTimeout(() => {
+      clearUndoToast();
+    }, DURATION);
+
+    undoRef.current = { task, timeoutId, completePromise, completed: false };
+    setUndoToast({ task, remaining: DURATION / 1000 });
+
+    if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
+    undoIntervalRef.current = setInterval(() => {
+      setUndoToast((prev) => {
+        if (!prev) return null;
+        const next = prev.remaining - 1;
+        if (next <= 0) return null;
+        return { ...prev, remaining: next };
+      });
+    }, 1000);
+  }
+
+  const handleUndo = useCallback(async () => {
+    const ref = undoRef.current;
+    if (!ref) return;
+    clearTimeout(ref.timeoutId);
+    clearUndoToast();
+
+    const task = ref.task;
+
+    // Re-add task optimistically
+    mutateTasks((prev) => (prev ? [task, ...prev] : [task]), false);
+    mutateCompleted((prev) => prev?.filter((t) => t.id !== task.id) ?? [], false);
+
+    // Wait for complete to finish (if still running) then uncomplete
+    await ref.completePromise;
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/uncomplete`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        mutateMembers(
+          (prev) =>
+            prev?.map((m) =>
+              m.id === currentUserId
+                ? { ...m, xp: data.xp, weekXp: data.weekXp, level: calcLevel(data.xp) }
+                : m
+            ) ?? [],
+          false
+        );
+      }
+    } catch {
+      // noop
+    }
+    mutateTasks();
+    mutateCompleted();
+  }, [mutateTasks, mutateCompleted, mutateMembers, currentUserId]);
+
+  const handleUncomplete = useCallback(
+    async (task: TaskWithRelations) => {
+      mutateCompleted((prev) => prev?.filter((t) => t.id !== task.id) ?? [], false);
+      mutateTasks((prev) => (prev ? [{ ...task, completedAt: null }, ...prev] : [{ ...task, completedAt: null }]), false);
+
+      try {
+        const res = await fetch(`/api/tasks/${task.id}/uncomplete`, { method: "POST" });
+        if (res.ok) {
+          const data = await res.json();
+          mutateMembers(
+            (prev) =>
+              prev?.map((m) =>
+                m.id === currentUserId
+                  ? { ...m, xp: data.xp, weekXp: data.weekXp, level: calcLevel(data.xp) }
+                  : m
+              ) ?? [],
+            false
+          );
+        }
+      } catch {
+        // noop
+      }
+      mutateTasks();
+      mutateCompleted();
+    },
+    [mutateCompleted, mutateTasks, mutateMembers, currentUserId]
+  );
+
   const handleCreated = useCallback(
     (task: TaskWithRelations) => {
       mutateTasks((prev) => (prev ? [task, ...prev] : [task]), false);
@@ -115,10 +233,16 @@ export default function DashboardClient() {
       mutateTasks((prev) => prev?.filter((t) => t.id !== task.id) ?? [], false);
       trackCombo(task.assigneeId ?? "");
 
+      let resolvePromise!: (v: CompleteResult | null) => void;
+      const completePromise = new Promise<CompleteResult | null>((res) => { resolvePromise = res; });
+
+      startUndoToast(task, completePromise);
+
       try {
         const res = await fetch(`/api/tasks/${task.id}/complete`, { method: "POST" });
         if (res.ok) {
           const data: CompleteResult = await res.json();
+          resolvePromise(data);
           mutateMembers(
             (prev) =>
               prev?.map((m) =>
@@ -132,12 +256,17 @@ export default function DashboardClient() {
             setLevelUpData({ level: data.newLevel });
           }
           if (data.nextTask) mutateTasks();
+          mutateCompleted();
+        } else {
+          resolvePromise(null);
+          mutateTasks();
         }
       } catch {
+        resolvePromise(null);
         mutateTasks();
       }
     },
-    [mutateTasks, mutateMembers, currentUserId]
+    [mutateTasks, mutateMembers, mutateCompleted, currentUserId]
   );
 
   const handleMoveToTomorrow = useCallback(
@@ -165,6 +294,14 @@ export default function DashboardClient() {
     },
     [mutateTasks]
   );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
+      if (undoRef.current) clearTimeout(undoRef.current.timeoutId);
+    };
+  }, []);
 
   const openTaskCount = activeTasks.length;
 
@@ -250,6 +387,64 @@ export default function DashboardClient() {
         </div>
       )}
 
+      {/* Completed tasks section */}
+      <div className="px-4 mt-6">
+        <button
+          onClick={() => setShowCompleted((v) => !v)}
+          className="flex items-center gap-2 w-full py-2 text-[var(--arc-muted)] text-xs font-bold tracking-widest uppercase"
+        >
+          {showCompleted ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          Voltooide taken
+        </button>
+
+        {showCompleted && (
+          <div className="mt-2 space-y-2">
+            {completedLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-5 h-5 animate-spin" style={{ color: "var(--xp-accent)" }} />
+              </div>
+            ) : (completedTasks ?? []).length === 0 ? (
+              <p className="text-[var(--arc-muted)] text-xs text-center py-4">Nog geen voltooide taken</p>
+            ) : (
+              (completedTasks ?? []).map((task) => {
+                const color = task.list?.color ?? "#6366f1";
+                const completedStr = task.completedAt
+                  ? new Date(task.completedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })
+                  : "";
+                return (
+                  <div
+                    key={task.id}
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                    style={{ background: "var(--arc-panel)", border: "1px solid var(--arc-border)" }}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 opacity-50"
+                      style={{ background: `${color}22` }}
+                    >
+                      {task.title.match(/^\p{Emoji}/u)?.[0] ?? "📋"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white font-medium truncate line-through opacity-50">
+                        {task.title.replace(/^\p{Emoji}\s*/u, "")}
+                      </p>
+                      <p className="text-[10px] text-[var(--arc-muted-deep)]">{completedStr}{task.list ? ` · ${task.list.name}` : ""}</p>
+                    </div>
+                    <button
+                      onClick={() => handleUncomplete(task)}
+                      className="shrink-0 p-2 rounded-xl transition-colors hover:bg-white/10"
+                      style={{ color: "var(--xp-accent)" }}
+                      title="Ongedaan maken"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Arcade task detail sheet */}
       {selectedTask && (
         <ArcadeTaskDetail
@@ -280,6 +475,35 @@ export default function DashboardClient() {
       />
 
       <ArcadeFAB onClick={() => setNewTaskOpen(true)} />
+
+      {/* Undo toast */}
+      {undoToast && (
+        <div
+          className="fixed bottom-24 left-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl"
+          style={{
+            background: "var(--arc-panel-2)",
+            border: "1px solid var(--arc-border-str)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+          }}
+        >
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-semibold truncate">
+              ✅ {undoToast.task.title.replace(/^\p{Emoji}\s*/u, "")}
+            </p>
+            <p className="text-[var(--arc-muted)] text-[10px]">Verdwijnt over {undoToast.remaining}s</p>
+          </div>
+          <button
+            onClick={handleUndo}
+            className="shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+            style={{
+              background: "linear-gradient(135deg, var(--xp-accent), var(--accent-primary))",
+              color: "white",
+            }}
+          >
+            Ongedaan maken
+          </button>
+        </div>
+      )}
     </div>
   );
 }
