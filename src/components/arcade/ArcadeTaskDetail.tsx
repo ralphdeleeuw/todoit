@@ -36,6 +36,9 @@ export function ArcadeTaskDetail({
   const [reassigning, setReassigning] = useState(false);
   const [currentList, setCurrentList] = useState(task.list);
   const [removingFromList, setRemovingFromList] = useState(false);
+  const [title, setTitle] = useState(task.title);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [savingTitle, setSavingTitle] = useState(false);
 
   const color = listColor(currentList?.color);
   const dueStr = task.dueDate
@@ -61,6 +64,29 @@ export function ArcadeTaskDetail({
       setRemovingFromList(false);
     }
   }
+  async function handleSaveTitle(newTitle: string) {
+    const trimmed = newTitle.trim();
+    if (!trimmed || trimmed === task.title || savingTitle) { setEditingTitle(false); setTitle(task.title); return; }
+    setSavingTitle(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: trimmed }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setTitle(updated.title);
+        onUpdated(updated);
+      } else {
+        setTitle(task.title);
+      }
+    } finally {
+      setSavingTitle(false);
+      setEditingTitle(false);
+    }
+  }
+
   const assigneeInitial = (assignee?.name ?? "?")[0].toUpperCase();
   const assigneeColor = PILL_COLORS[members.findIndex((m) => m.id === assigneeId) % PILL_COLORS.length] ?? "#6366f1";
 
@@ -186,12 +212,31 @@ export function ArcadeTaskDetail({
                 className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
                 style={{ background: `${color}22`, border: `1px solid ${color}44` }}
               >
-                {task.title.match(/^\p{Emoji}/u)?.[0] ?? "📋"}
+                {title.match(/^\p{Emoji}/u)?.[0] ?? "📋"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-white text-base leading-tight">
-                  {task.title.replace(/^\p{Emoji}\s*/u, "")}
-                </p>
+                {editingTitle ? (
+                  <input
+                    autoFocus
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    onBlur={(e) => handleSaveTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { e.preventDefault(); handleSaveTitle(title); }
+                      if (e.key === "Escape") { setEditingTitle(false); setTitle(task.title); }
+                    }}
+                    disabled={savingTitle}
+                    className="w-full bg-transparent font-bold text-white text-base leading-tight border-b border-white/30 outline-none pb-0.5"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditingTitle(true)}
+                    className="text-left font-bold text-white text-base leading-tight w-full hover:opacity-80 transition-opacity"
+                  >
+                    {title.replace(/^\p{Emoji}\s*/u, "")}
+                  </button>
+                )}
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {currentList && (
                     <span className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: `${color}22`, color }}>
