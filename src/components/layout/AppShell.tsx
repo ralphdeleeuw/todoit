@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Home, List, Users, Settings, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ArcadeBottomNav } from "@/components/arcade/ArcadeBottomNav";
+import { NavigationProgress } from "@/components/arcade/NavigationProgress";
 import type { SessionUser } from "@/types";
 
 interface AppShellProps {
@@ -27,6 +28,7 @@ export function AppShell({ children, user, lists }: AppShellProps) {
 
   return (
     <div className="flex h-full min-h-screen bg-[var(--background)]">
+      <NavigationProgress />
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-60 shrink-0 border-r border-[var(--border)] bg-white dark:bg-gray-900 h-screen sticky top-0">
         {/* Logo */}
