@@ -185,6 +185,7 @@ model Task {
   updatedAt DateTime @updatedAt
 
   @@index([familyId])
+  @@index([familyId, completedAt])
   @@index([assigneeId])
   @@index([listId])
   @@index([dueDate])
