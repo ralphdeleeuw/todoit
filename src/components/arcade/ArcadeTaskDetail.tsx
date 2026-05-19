@@ -328,18 +328,6 @@ export function ArcadeTaskDetail({
               </div>
               {isParent && members.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
-                  {/* Wie pakt deze? pill */}
-                  <button
-                    type="button"
-                    onClick={() => handleReassign(OPEN_ID)}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-medium transition-all active:scale-95"
-                    style={openForClaim
-                      ? { background: "#f59e0b33", border: "1.5px solid #f59e0b", color: "white" }
-                      : { background: "var(--arc-panel-2)", border: "1px solid var(--arc-border)", color: "var(--arc-muted)" }
-                    }
-                  >
-                    🙋 Wie pakt?
-                  </button>
                   {members.map((m, i) => {
                     const mColor = PILL_COLORS[i % PILL_COLORS.length];
                     const mInitial = (m.name ?? "?")[0].toUpperCase();
