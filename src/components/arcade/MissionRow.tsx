@@ -259,20 +259,30 @@ export function MissionRow({
             >
               💎 {task.list?.points ?? 0}
             </span>
-            <div
-              className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[10px] font-bold text-white overflow-hidden"
-              style={{ background: "#6366f1" }}
-            >
-              {task.assignee?.image ? (
-                <img
-                  src={task.assignee.image}
-                  alt=""
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                assigneeInitial
-              )}
-            </div>
+            {task.openForClaim ? (
+              <div
+                className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-sm"
+                style={{ background: "#f59e0b22", border: "1px solid #f59e0b66" }}
+                title="Wie pakt deze?"
+              >
+                🙋
+              </div>
+            ) : (
+              <div
+                className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[10px] font-bold text-white overflow-hidden"
+                style={{ background: "#6366f1" }}
+              >
+                {task.assignee?.image ? (
+                  <img
+                    src={task.assignee.image}
+                    alt=""
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  assigneeInitial
+                )}
+              </div>
+            )}
           </div>
         </div>
       </motion.div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Trash2, Check, Plus, Loader2 } from "lucide-react";
+import { X, Trash2, Check, Plus, Loader2, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listColor } from "@/lib/arcade";
 import type { TaskWithRelations, SubtaskSummary } from "@/types";
@@ -33,7 +33,9 @@ export function ArcadeTaskDetail({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [assigneeId, setAssigneeId] = useState<string | null>(task.assigneeId ?? null);
+  const [openForClaim, setOpenForClaim] = useState(task.openForClaim);
   const [reassigning, setReassigning] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const [currentList, setCurrentList] = useState(task.list);
   const [removingFromList, setRemovingFromList] = useState(false);
   const [title, setTitle] = useState(task.title);
@@ -90,22 +92,47 @@ export function ArcadeTaskDetail({
   const assigneeInitial = (assignee?.name ?? "?")[0].toUpperCase();
   const assigneeColor = PILL_COLORS[members.findIndex((m) => m.id === assigneeId) % PILL_COLORS.length] ?? "#6366f1";
 
+  const OPEN_ID = "__open__";
+
   async function handleReassign(newAssigneeId: string) {
-    if (newAssigneeId === assigneeId || reassigning) return;
+    if (reassigning) return;
+    const isOpen = newAssigneeId === OPEN_ID;
+    if (!isOpen && newAssigneeId === assigneeId && !openForClaim) return;
     setReassigning(true);
     try {
       const res = await fetch(`/api/tasks/${task.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assigneeId: newAssigneeId }),
+        body: JSON.stringify({
+          assigneeId: isOpen ? null : newAssigneeId,
+          openForClaim: isOpen,
+        }),
       });
       if (res.ok) {
         const updated = await res.json();
-        setAssigneeId(newAssigneeId);
+        setAssigneeId(isOpen ? null : newAssigneeId);
+        setOpenForClaim(isOpen);
         onUpdated(updated);
       }
     } finally {
       setReassigning(false);
+    }
+  }
+
+  async function handleClaim() {
+    if (claiming) return;
+    setClaiming(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/claim`, { method: "POST" });
+      if (res.ok) {
+        const updated = await res.json();
+        setAssigneeId(updated.assigneeId);
+        setOpenForClaim(false);
+        onUpdated(updated);
+        onOpenChange(false);
+      }
+    } finally {
+      setClaiming(false);
     }
   }
 
@@ -273,26 +300,50 @@ export function ArcadeTaskDetail({
               style={{ borderTop: "1px solid var(--arc-border)" }}
             >
               <div className="flex items-center gap-2 mb-2">
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white overflow-hidden shrink-0"
-                  style={{ background: assigneeColor }}
-                >
-                  {assignee?.image
-                    ? <img src={assignee.image} alt="" className="w-full h-full object-cover rounded-full" />
-                    : assigneeInitial
-                  }
-                </div>
+                {openForClaim ? (
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0"
+                    style={{ background: "#f59e0b22", border: "1px solid #f59e0b44" }}
+                  >
+                    🙋
+                  </div>
+                ) : (
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white overflow-hidden shrink-0"
+                    style={{ background: assigneeColor }}
+                  >
+                    {assignee?.image
+                      ? <img src={assignee.image} alt="" className="w-full h-full object-cover rounded-full" />
+                      : assigneeInitial
+                    }
+                  </div>
+                )}
                 <span className="text-xs text-[var(--arc-muted)]">
-                  <span className="text-white font-medium">{assignee?.name ?? "Iemand"}</span> doet deze taak
+                  {openForClaim
+                    ? <span className="font-medium" style={{ color: "#f59e0b" }}>Wie pakt deze?</span>
+                    : <><span className="text-white font-medium">{assignee?.name ?? "Iemand"}</span> doet deze taak</>
+                  }
                 </span>
                 {reassigning && <span className="text-[10px] text-[var(--arc-muted)] ml-auto">opslaan…</span>}
               </div>
-              {isParent && members.length > 1 && (
+              {isParent && members.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
+                  {/* Wie pakt deze? pill */}
+                  <button
+                    type="button"
+                    onClick={() => handleReassign(OPEN_ID)}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-medium transition-all active:scale-95"
+                    style={openForClaim
+                      ? { background: "#f59e0b33", border: "1.5px solid #f59e0b", color: "white" }
+                      : { background: "var(--arc-panel-2)", border: "1px solid var(--arc-border)", color: "var(--arc-muted)" }
+                    }
+                  >
+                    🙋 Wie pakt?
+                  </button>
                   {members.map((m, i) => {
                     const mColor = PILL_COLORS[i % PILL_COLORS.length];
                     const mInitial = (m.name ?? "?")[0].toUpperCase();
-                    const isActive = m.id === assigneeId;
+                    const isActive = !openForClaim && m.id === assigneeId;
                     return (
                       <button
                         key={m.id}
@@ -400,18 +451,33 @@ export function ArcadeTaskDetail({
             className="sticky bottom-0 px-4 pb-8 pt-3 flex gap-2"
             style={{ background: "var(--arc-panel)", borderTop: "1px solid var(--arc-border)" }}
           >
-            <button
-              type="button"
-              onClick={handleComplete}
-              disabled={completing}
-              className="flex-1 py-3.5 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[.98] disabled:opacity-50"
-              style={{
-                background: "linear-gradient(135deg, var(--xp-accent), var(--accent-primary))",
-                boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
-              }}
-            >
-              {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" strokeWidth={3} /> Voltooi taak</>}
-            </button>
+            {openForClaim ? (
+              <button
+                type="button"
+                onClick={handleClaim}
+                disabled={claiming}
+                className="flex-1 py-3.5 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[.98] disabled:opacity-50"
+                style={{
+                  background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                  boxShadow: "0 4px 16px rgba(245,158,11,0.4)",
+                }}
+              >
+                {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : <><UserPlus className="w-4 h-4" /> Pak deze taak</>}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleComplete}
+                disabled={completing}
+                className="flex-1 py-3.5 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[.98] disabled:opacity-50"
+                style={{
+                  background: "linear-gradient(135deg, var(--xp-accent), var(--accent-primary))",
+                  boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
+                }}
+              >
+                {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" strokeWidth={3} /> Voltooi taak</>}
+              </button>
+            )}
             {canDelete && (
               <button
                 type="button"
