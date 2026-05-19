@@ -379,6 +379,7 @@ export default function DashboardClient() {
                     onMoveToTomorrow={() => handleMoveToTomorrow(task)}
                     onOpenDetail={() => setSelectedTask(task)}
                     onDelete={() => handleDelete(task)}
+                    onClaimed={handleUpdated}
                   />
                 ))}
               </div>
