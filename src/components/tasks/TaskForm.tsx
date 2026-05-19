@@ -31,6 +31,7 @@ export interface TaskFormData {
   dueDate: string;
   reminderAt: string;
   assigneeId: string;
+  openForClaim: boolean;
   listId: string;
   labelIds: string[];
   isRecurring: boolean;
@@ -66,7 +67,10 @@ export function TaskForm({
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [dueDate, setDueDate] = useState(initialData?.dueDate ?? "");
   const [reminderAt, setReminderAt] = useState(initialData?.reminderAt ?? "");
-  const [assigneeId, setAssigneeId] = useState(initialData?.assigneeId ?? currentUserId);
+  const OPEN_FOR_CLAIM = "__open__";
+  const [assigneeId, setAssigneeId] = useState(
+    initialData?.openForClaim ? OPEN_FOR_CLAIM : (initialData?.assigneeId ?? currentUserId)
+  );
   const [listId, setListId] = useState(initialData?.listId ?? "__none__");
   const [selectedLabels, setSelectedLabels] = useState<string[]>(initialData?.labelIds ?? []);
   const [isRecurring, setIsRecurring] = useState(initialData?.isRecurring ?? false);
@@ -88,7 +92,8 @@ export function TaskForm({
       description: description.trim(),
       dueDate,
       reminderAt,
-      assigneeId,
+      assigneeId: assigneeId === OPEN_FOR_CLAIM ? "" : assigneeId,
+      openForClaim: assigneeId === OPEN_FOR_CLAIM,
       listId: listId === "__none__" ? "" : listId,
       labelIds: selectedLabels,
       isRecurring,
@@ -153,7 +158,7 @@ export function TaskForm({
         {isParent && members.length > 0 && (
           <div>
             <Label.Root className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Toewijzen aan
+              Uitvoerder
             </Label.Root>
             <Select.Root value={assigneeId} onValueChange={setAssigneeId}>
               <Select.Trigger className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--border)] bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -165,6 +170,12 @@ export function TaskForm({
               <Select.Portal>
                 <Select.Content className="z-50 overflow-hidden rounded-lg border border-[var(--border)] bg-white dark:bg-gray-800 shadow-lg">
                   <Select.Viewport className="p-1">
+                    <Select.Item
+                      value={OPEN_FOR_CLAIM}
+                      className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-amber-600 dark:text-amber-400 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950/50 outline-none data-[highlighted]:bg-amber-50 dark:data-[highlighted]:bg-amber-950/50"
+                    >
+                      <Select.ItemText>🙋 Wie pakt deze?</Select.ItemText>
+                    </Select.Item>
                     {members.map((m) => (
                       <Select.Item
                         key={m.id}

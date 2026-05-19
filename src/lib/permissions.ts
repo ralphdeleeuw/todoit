@@ -1,11 +1,12 @@
 import type { FamilyRole } from "@prisma/client";
 
 type Viewer = { id: string; role: FamilyRole; familyId: string | null };
-type TaskLike = { familyId: string; assigneeId: string | null; createdById: string };
+type TaskLike = { familyId: string; assigneeId: string | null; createdById: string; openForClaim: boolean };
 
 export function canReadTask(viewer: Viewer, task: TaskLike): boolean {
   if (!viewer.familyId || viewer.familyId !== task.familyId) return false;
   if (viewer.role === "PARENT") return true;
+  if (task.openForClaim) return true;
   return task.assigneeId === viewer.id || task.createdById === viewer.id;
 }
 
