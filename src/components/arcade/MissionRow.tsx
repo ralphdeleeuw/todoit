@@ -4,7 +4,7 @@ import { useRef, useState, useCallback } from "react";
 import { useDrag } from "@use-gesture/react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Checkbox from "@radix-ui/react-checkbox";
-import { Check, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Check, Calendar, Pencil, Trash2, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listColor } from "@/lib/arcade";
 import type { TaskWithRelations } from "@/types";
@@ -16,6 +16,7 @@ interface MissionRowProps {
   onOpenDetail: () => void;
   onDelete: () => void;
   onPickDate?: () => void;
+  onClaimed?: (task: TaskWithRelations) => void;
 }
 
 const SWIPE_THRESHOLD = 64;
@@ -29,9 +30,11 @@ export function MissionRow({
   onOpenDetail,
   onDelete,
   onPickDate,
+  onClaimed,
 }: MissionRowProps) {
   const [x, setX] = useState(0);
   const [completing, setCompleting] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const [floater, setFloater] = useState<string | null>(null);
 
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,6 +124,18 @@ export function MissionRow({
     setTimeout(() => {
       onComplete();
     }, 600);
+  }
+
+  async function handleClaim(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (claiming) return;
+    setClaiming(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/claim`, { method: "POST" });
+      if (res.ok) onClaimed?.(await res.json());
+    } finally {
+      setClaiming(false);
+    }
   }
 
   function closeQuickOptions() {
@@ -251,7 +266,7 @@ export function MissionRow({
             </div>
           </div>
 
-          {/* Right: gem chip + avatar */}
+          {/* Right: gem chip + avatar / claim button */}
           <div className="flex items-center gap-2 shrink-0 pr-1">
             <span
               className="text-[11px] font-bold px-2 py-1 rounded-full tabular-nums"
@@ -260,13 +275,16 @@ export function MissionRow({
               💎 {task.list?.points ?? 0}
             </span>
             {task.openForClaim ? (
-              <div
-                className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-sm"
-                style={{ background: "#f59e0b22", border: "1px solid #f59e0b66" }}
-                title="Wie pakt deze?"
+              <button
+                type="button"
+                onClick={handleClaim}
+                disabled={claiming}
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold transition-all active:scale-95 disabled:opacity-50"
+                style={{ background: "#f59e0b22", border: "1px solid #f59e0b66", color: "#f59e0b" }}
               >
-                🙋
-              </div>
+                <UserPlus className="w-3 h-3" />
+                {claiming ? "…" : "Pak 'm"}
+              </button>
             ) : (
               <div
                 className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[10px] font-bold text-white overflow-hidden"
