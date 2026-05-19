@@ -51,7 +51,7 @@ export function ArcadeNewTaskSheet({
   const [emojiIdx, setEmojiIdx] = useState(0);
   const [title, setTitle] = useState("");
   const [when, setWhen] = useState("today");
-  const [assigneeId, setAssigneeId] = useState(currentUserId);
+  const [assigneeId, setAssigneeId] = useState<string>(currentUserId);
   const [listId, setListId] = useState<string>(lists[0]?.id ?? "");
   const [recur, setRecur] = useState("");
   const [loading, setLoading] = useState(false);
@@ -59,6 +59,8 @@ export function ArcadeNewTaskSheet({
 
   const selectedList = lists.find((l) => l.id === listId);
   const pointsPreview = selectedList?.points ?? 0;
+
+  const OPEN_ID = "__open__";
 
   function reset() {
     setTitle(""); setWhen("today"); setAssigneeId(currentUserId);
@@ -77,7 +79,8 @@ export function ArcadeNewTaskSheet({
         body: JSON.stringify({
           title: `${EMOJIS[emojiIdx]} ${title.trim()}`,
           dueDate: dueDateFromWhen(when),
-          assigneeId: assigneeId || null,
+          assigneeId: assigneeId === OPEN_ID ? null : (assigneeId || null),
+          openForClaim: assigneeId === OPEN_ID,
           listId: listId || null,
           isRecurring: recur !== "",
           recurrenceInterval: recur ? parseInt(recur) : null,
@@ -195,6 +198,26 @@ export function ArcadeNewTaskSheet({
               <div>
                 <p className="text-[10px] font-bold tracking-widest uppercase text-[var(--arc-muted)] mb-2">Voor wie</p>
                 <div className="grid grid-cols-4 gap-2">
+                  {/* Wie pakt deze? */}
+                  <button
+                    type="button"
+                    onClick={() => setAssigneeId(OPEN_ID)}
+                    className="flex flex-col items-center gap-1.5 py-2.5 rounded-2xl text-xs font-semibold transition-all"
+                    style={
+                      assigneeId === OPEN_ID
+                        ? { background: "#f59e0b22", border: "1.5px solid #f59e0b", boxShadow: "0 0 8px #f59e0b44", color: "white" }
+                        : { background: "var(--arc-panel-2)", border: "1.5px solid var(--arc-border)", color: "var(--arc-muted)" }
+                    }
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden"
+                      style={{ background: "#f59e0b22", border: "1.5px solid #f59e0b44", fontSize: 18 }}
+                    >
+                      🙋
+                    </div>
+                    <span className="truncate w-full text-center px-1 leading-tight">Wie pakt?</span>
+                  </button>
+
                   {members.map((m, i) => {
                     const color = PILL_COLORS[i % PILL_COLORS.length];
                     const active = assigneeId === m.id;
