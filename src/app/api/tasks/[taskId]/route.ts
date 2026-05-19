@@ -40,6 +40,12 @@ export async function PATCH(req: Request, ctx: Ctx) {
     const body = await req.json();
     const prevAssigneeId = existing.assigneeId;
 
+    const canAssign = canAssignToOthers(user);
+    const openForClaim = canAssign && body.openForClaim !== undefined ? body.openForClaim : undefined;
+    const assigneeId = canAssign && body.assigneeId !== undefined
+      ? (body.openForClaim ? null : body.assigneeId)
+      : undefined;
+
     const task = await prisma.task.update({
       where: { id: taskId },
       data: {
@@ -48,7 +54,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
         dueDate: body.dueDate !== undefined ? (body.dueDate ? new Date(body.dueDate) : null) : undefined,
         reminderAt: body.reminderAt !== undefined ? (body.reminderAt ? new Date(body.reminderAt) : null) : undefined,
         listId: body.listId !== undefined ? body.listId : undefined,
-        assigneeId: canAssignToOthers(user) && body.assigneeId !== undefined ? body.assigneeId : undefined,
+        assigneeId,
+        openForClaim,
         isRecurring: body.isRecurring ?? undefined,
         recurrenceInterval: body.recurrenceInterval ?? undefined,
         labels: body.labelIds !== undefined

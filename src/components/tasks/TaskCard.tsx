@@ -3,7 +3,7 @@
 import { useState } from "react";
 import * as Checkbox from "@radix-ui/react-checkbox";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Check, RefreshCw, CalendarDays, ListChecks, X } from "lucide-react";
+import { Check, RefreshCw, CalendarDays, ListChecks, X, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isOverdue } from "@/lib/utils";
 import type { TaskWithRelations } from "@/types";
@@ -67,8 +67,20 @@ export function TaskCard({
 }: TaskCardProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const [recurringDialogOpen, setRecurringDialogOpen] = useState(false);
   const isCompleted = !!task.completedAt;
+
+  async function handleClaim(e: React.MouseEvent) {
+    e.stopPropagation();
+    setClaiming(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/claim`, { method: "POST" });
+      if (res.ok) onUpdated(await res.json());
+    } finally {
+      setClaiming(false);
+    }
+  }
 
   async function doComplete(permanent: boolean) {
     setCompleting(true);
@@ -135,8 +147,18 @@ export function TaskCard({
               {task.title}
             </span>
 
-            {/* Assignee avatar */}
-            {task.assignee && (
+            {/* Assignee / claim */}
+            {task.openForClaim && !isCompleted ? (
+              <button
+                onClick={handleClaim}
+                disabled={claiming}
+                className="shrink-0 ml-1 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 text-xs font-medium hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors"
+                title="Pak deze taak"
+              >
+                <UserPlus className="w-3 h-3" />
+                {claiming ? "..." : "Pak 'm"}
+              </button>
+            ) : task.assignee ? (
               <div className="shrink-0 ml-1">
                 {task.assignee.image ? (
                   <img
@@ -154,7 +176,7 @@ export function TaskCard({
                   </div>
                 )}
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Meta row */}

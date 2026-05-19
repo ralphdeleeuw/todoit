@@ -28,6 +28,7 @@ export async function GET(req: Request) {
       // Visibility-based filtering: tasks on FAMILY/SHARED lists are visible to all;
       // tasks with no list or on a PRIVATE list are only visible to their assignee/creator.
       where.OR = [
+        { openForClaim: true },
         { list: { visibility: { in: ["FAMILY", "SHARED"] } } },
         { listId: null, OR: [{ assigneeId: user.id }, { createdById: user.id }] },
         { list: { visibility: "PRIVATE" }, OR: [{ assigneeId: user.id }, { createdById: user.id }] },
@@ -68,7 +69,8 @@ export async function POST(req: Request) {
     const user = await requireFamily();
     const body = await req.json();
 
-    const assigneeId = canAssignToOthers(user) ? (body.assigneeId ?? user.id) : user.id;
+    const openForClaim = canAssignToOthers(user) ? (body.openForClaim ?? false) : false;
+    const assigneeId = openForClaim ? null : (canAssignToOthers(user) ? (body.assigneeId ?? user.id) : user.id);
 
     const task = await prisma.task.create({
       data: {
@@ -79,6 +81,7 @@ export async function POST(req: Request) {
         familyId: user.familyId,
         listId: body.listId ?? null,
         assigneeId,
+        openForClaim,
         createdById: user.id,
         isRecurring: body.isRecurring ?? false,
         recurrenceInterval: body.recurrenceInterval ?? null,
