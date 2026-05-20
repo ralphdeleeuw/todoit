@@ -53,6 +53,8 @@ model User {
   pushSubs       PushSubscription[]
   ownedLists     TaskList[]        @relation("OwnedLists")
   sharedLists    TaskListMember[]  @relation("SharedListMember")
+
+  @@index([familyId])
 }
 
 // NextAuth required tables
@@ -73,6 +75,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -81,6 +84,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -88,7 +93,7 @@ model VerificationToken {
   token      String   @unique
   expires    DateTime
 
-  @@unique([identifier, token])
+  @@id([identifier, token])
 }
 
 // ─── Invite ────────────────────────────────────────────────────────────────
@@ -102,6 +107,8 @@ model FamilyInvite {
   expiresAt DateTime
   usedAt   DateTime?
   createdAt DateTime  @default(now())
+
+  @@index([familyId])
 }
 
 // ─── Task Organization ─────────────────────────────────────────────────────
@@ -126,6 +133,9 @@ model TaskList {
   tasks      Task[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([familyId])
+  @@index([ownerId])
 }
 
 model TaskListMember {
@@ -135,6 +145,7 @@ model TaskListMember {
   user   User     @relation("SharedListMember", fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([listId, userId])
+  @@index([userId])
 }
 
 model Label {
@@ -145,6 +156,8 @@ model Label {
   family   Family      @relation(fields: [familyId], references: [id])
   tasks    TaskLabel[]
   createdAt DateTime   @default(now())
+
+  @@index([familyId])
 }
 
 // ─── Tasks ─────────────────────────────────────────────────────────────────
@@ -191,6 +204,9 @@ model Task {
   @@index([assigneeId])
   @@index([listId])
   @@index([dueDate])
+  @@index([createdById])
+  @@index([parentTaskId])
+  @@index([subtaskParentId])
 }
 
 model TaskLabel {
@@ -200,6 +216,7 @@ model TaskLabel {
   label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
 
   @@id([taskId, labelId])
+  @@index([labelId])
 }
 
 // ─── Push ──────────────────────────────────────────────────────────────────
@@ -213,4 +230,6 @@ model PushSubscription {
   authKey   String
   userAgent String?
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
