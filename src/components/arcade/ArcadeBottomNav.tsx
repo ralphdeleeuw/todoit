@@ -38,8 +38,8 @@ export function ArcadeBottomNav() {
             key={href}
             href={href}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all",
-              active ? "text-white" : "text-[var(--arc-muted)]"
+              "flex items-center rounded-full text-xs font-semibold transition-all",
+              active ? "gap-1.5 px-3 py-1.5 text-white" : "px-3 py-1.5 text-[var(--arc-muted)]"
             )}
             style={
               active
@@ -50,8 +50,8 @@ export function ArcadeBottomNav() {
                 : undefined
             }
           >
-            <Icon className="w-4 h-4 shrink-0" />
-            {label}
+            <Icon className="w-[18px] h-[18px] shrink-0" />
+            {active && label}
           </Link>
         );
       })}
