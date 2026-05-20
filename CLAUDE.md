@@ -2,5 +2,5 @@
 
 ## Git workflow
 
-- Ontwikkel op een feature branch, maar push wijzigingen daarna direct naar `main` (geen PR nodig).
+- Push wijzigingen direct naar `main` (geen PR, geen CI-check nodig).
 - Doe dit altijd, ook voor documentatie-commits.
