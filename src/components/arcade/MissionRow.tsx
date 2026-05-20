@@ -208,11 +208,11 @@ export function MissionRow({
         />
 
         <div
-          className="flex items-center gap-3 w-full py-4 pl-3"
+          className="flex items-center gap-3 w-full py-3 pl-3"
           style={{
             background: "linear-gradient(135deg, #1d1c3d 0%, #15142e 100%)",
             borderRadius: 16,
-            minHeight: 74,
+            minHeight: 64,
           }}
         >
           {/* Checkbox */}
@@ -237,16 +237,14 @@ export function MissionRow({
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-white text-sm leading-snug truncate">
-                {task.title}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          <div className="flex-1 min-w-0 pr-2">
+            <span className="font-semibold text-white text-sm leading-snug line-clamp-1">
+              {task.title}
+            </span>
+            <div className="flex items-center gap-1.5 mt-1">
               {dueStr && (
                 <span
-                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0"
                   style={{ background: "rgba(255,255,255,0.08)", color: "var(--arc-muted)" }}
                 >
                   📅 {dueStr}
@@ -254,7 +252,7 @@ export function MissionRow({
               )}
               {task.list && (
                 <span
-                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-full truncate"
                   style={{
                     background: `${listColor(task.list.color)}22`,
                     color: listColor(task.list.color),
@@ -263,44 +261,42 @@ export function MissionRow({
                   {task.list.name}
                 </span>
               )}
-            </div>
-          </div>
-
-          {/* Right: gem chip + avatar / claim button */}
-          <div className="flex items-center gap-2 shrink-0 pr-1">
-            <span
-              className="text-[11px] font-bold px-2 py-1 rounded-full tabular-nums"
-              style={{ background: "#facc1522", color: "#facc15" }}
-            >
-              💎 {task.list?.points ?? 0}
-            </span>
-            {task.openForClaim ? (
-              <button
-                type="button"
-                onClick={handleClaim}
-                disabled={claiming}
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold transition-all active:scale-95 disabled:opacity-50"
-                style={{ background: "#f59e0b22", border: "1px solid #f59e0b66", color: "#f59e0b" }}
-              >
-                <UserPlus className="w-3 h-3" />
-                {claiming ? "…" : "Pak 'm"}
-              </button>
-            ) : (
-              <div
-                className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-[10px] font-bold text-white overflow-hidden"
-                style={{ background: "#6366f1" }}
-              >
-                {task.assignee?.image ? (
-                  <img
-                    src={task.assignee.image}
-                    alt=""
-                    className="w-full h-full object-cover rounded-full"
-                  />
+              <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                <span
+                  className="text-[11px] font-bold px-2 py-0.5 rounded-full tabular-nums"
+                  style={{ background: "#facc1522", color: "#facc15" }}
+                >
+                  💎 {task.list?.points ?? 0}
+                </span>
+                {task.openForClaim ? (
+                  <button
+                    type="button"
+                    onClick={handleClaim}
+                    disabled={claiming}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold transition-all active:scale-95 disabled:opacity-50"
+                    style={{ background: "#f59e0b22", border: "1px solid #f59e0b66", color: "#f59e0b" }}
+                  >
+                    <UserPlus className="w-3 h-3" />
+                    {claiming ? "…" : "Pak 'm"}
+                  </button>
                 ) : (
-                  assigneeInitial
+                  <div
+                    className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-bold text-white overflow-hidden"
+                    style={{ background: "#6366f1" }}
+                  >
+                    {task.assignee?.image ? (
+                      <img
+                        src={task.assignee.image}
+                        alt=""
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      assigneeInitial
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </motion.div>
