@@ -1,10 +1,12 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { verifyFamily } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { calcLevel, xpIntoCurrentLevel } from "@/lib/arcade";
 import { ArcadeBottomNav } from "@/components/arcade/ArcadeBottomNav";
+import { CompletedTasksChart } from "@/components/profile/CompletedTasksChart";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { subDays, startOfDay, format } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +18,9 @@ export default async function ProfilePage({ params }: Params) {
   const { memberId } = await params;
   const session = await verifyFamily();
 
-  const [member, allMembers] = await Promise.all([
+  const thirtyDaysAgo = startOfDay(subDays(new Date(), 29));
+
+  const [member, allMembers, recentCompletions] = await Promise.all([
     prisma.user.findFirst({
       where: { id: memberId, familyId: session.familyId },
       select: {
@@ -34,6 +38,14 @@ export default async function ProfilePage({ params }: Params) {
       where: { familyId: session.familyId },
       select: { id: true, weekXp: true },
       orderBy: { weekXp: "desc" },
+    }),
+    prisma.task.findMany({
+      where: {
+        assigneeId: memberId,
+        familyId: session.familyId,
+        completedAt: { gte: thirtyDaysAgo },
+      },
+      select: { completedAt: true },
     }),
   ]);
 
@@ -53,6 +65,19 @@ export default async function ProfilePage({ params }: Params) {
     { label: "Streak",       value: `${member.streak}d`, icon: "🔥", color: "#ef4444" },
     { label: "Badges",       value: level,          icon: "🏅", color: "#10b981" },
   ];
+
+  // Build 30-day completion count per day
+  const completionsByDay: Record<string, number> = {};
+  for (const t of recentCompletions) {
+    if (!t.completedAt) continue;
+    const key = format(t.completedAt, "yyyy-MM-dd");
+    completionsByDay[key] = (completionsByDay[key] ?? 0) + 1;
+  }
+  const chartDays = Array.from({ length: 30 }, (_, i) => {
+    const d = subDays(new Date(), 29 - i);
+    const key = format(d, "yyyy-MM-dd");
+    return { key, label: format(d, "d/M"), count: completionsByDay[key] ?? 0 };
+  });
 
   return (
     <div className="min-h-screen pb-32" style={{ background: "var(--arc-bg)" }}>
@@ -163,6 +188,11 @@ export default async function ProfilePage({ params }: Params) {
           </div>
         </div>
       )}
+
+      {/* Completions chart */}
+      <div className="px-4 mt-4">
+        <CompletedTasksChart days={chartDays} color={color} />
+      </div>
 
       <div className="md:hidden">
         <ArcadeBottomNav />
