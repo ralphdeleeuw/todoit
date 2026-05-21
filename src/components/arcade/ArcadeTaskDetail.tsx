@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Trash2, Check, Plus, Loader2, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listColor } from "@/lib/arcade";
+import { RecurrenceHistory } from "@/components/tasks/RecurrenceHistory";
 import type { TaskWithRelations, SubtaskSummary } from "@/types";
 
 interface Member { id: string; name: string | null; image: string | null; }
@@ -41,6 +42,15 @@ export function ArcadeTaskDetail({
   const [title, setTitle] = useState(task.title);
   const [editingTitle, setEditingTitle] = useState(false);
   const [savingTitle, setSavingTitle] = useState(false);
+  const [history, setHistory] = useState<Array<{ id: string; completedAt: string }>>([]);
+
+  useEffect(() => {
+    if (!open || !task.isRecurring) return;
+    fetch(`/api/tasks/${task.id}/history`)
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) && setHistory(data))
+      .catch(() => {});
+  }, [open, task.id, task.isRecurring]);
 
   const color = listColor(currentList?.color);
   const dueStr = task.dueDate
@@ -371,6 +381,16 @@ export function ArcadeTaskDetail({
 
           <div className="px-4 pb-4 space-y-4">
             {error && <p className="text-xs text-rose-400">{error}</p>}
+
+            {/* Recurrence history */}
+            {task.isRecurring && (
+              <div
+                className="rounded-2xl p-3"
+                style={{ background: "var(--arc-panel-2)", border: "1px solid var(--arc-border)" }}
+              >
+                <RecurrenceHistory history={history} />
+              </div>
+            )}
 
             {/* Subtasks */}
             {(subtasks.length > 0 || true) && (
