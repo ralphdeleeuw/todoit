@@ -54,17 +54,19 @@ export function ArcadeNewTaskSheet({
   const [assigneeId, setAssigneeId] = useState<string>(currentUserId);
   const [listId, setListId] = useState<string>(lists[0]?.id ?? "");
   const [recur, setRecur] = useState("");
+  const [customPoints, setCustomPoints] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const selectedList = lists.find((l) => l.id === listId);
-  const pointsPreview = selectedList?.points ?? 0;
+  const listPoints = selectedList?.points ?? 0;
+  const pointsPreview = customPoints !== "" ? Number(customPoints) : listPoints;
 
   const OPEN_ID = "__open__";
 
   function reset() {
     setTitle(""); setWhen("today"); setAssigneeId(currentUserId);
-    setListId(lists[0]?.id ?? ""); setRecur(""); setEmojiIdx(0); setError(null);
+    setListId(lists[0]?.id ?? ""); setRecur(""); setEmojiIdx(0); setError(null); setCustomPoints("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -85,6 +87,7 @@ export function ArcadeNewTaskSheet({
           isRecurring: recur !== "",
           recurrenceInterval: recur ? parseInt(recur) : null,
           labelIds: [],
+          points: customPoints !== "" ? Number(customPoints) : null,
         }),
       });
       if (!res.ok) { const b = await res.json(); throw new Error(b.error ?? "Mislukt"); }
@@ -273,6 +276,26 @@ export function ArcadeNewTaskSheet({
                     {o.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* XP punten */}
+            <div>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-[var(--arc-muted)] mb-2">XP-punten</p>
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  min={0}
+                  max={9999}
+                  value={customPoints}
+                  onChange={(e) => setCustomPoints(e.target.value)}
+                  placeholder={String(listPoints)}
+                  className="w-24 px-3 py-2 rounded-xl text-white text-sm text-center font-semibold outline-none"
+                  style={{ background: "var(--arc-panel-2)", border: "1.5px solid var(--arc-border-str)" }}
+                />
+                <span className="text-xs text-[var(--arc-muted)]">
+                  {customPoints !== "" ? "aangepast" : `standaard van lijst`}
+                </span>
               </div>
             </div>
 

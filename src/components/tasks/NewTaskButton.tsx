@@ -77,6 +77,7 @@ export function NewTaskButton({
           labelIds: data.labelIds,
           isRecurring: data.isRecurring,
           recurrenceInterval: data.isRecurring ? data.recurrenceInterval : null,
+          points: data.points,
         }),
       });
       if (!res.ok) {

@@ -54,6 +54,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
         dueDate: body.dueDate !== undefined ? (body.dueDate ? new Date(body.dueDate) : null) : undefined,
         reminderAt: body.reminderAt !== undefined ? (body.reminderAt ? new Date(body.reminderAt) : null) : undefined,
         listId: body.listId !== undefined ? body.listId : undefined,
+        points: body.points !== undefined ? (body.points != null ? Number(body.points) : null) : undefined,
         assigneeId,
         openForClaim,
         isRecurring: body.isRecurring ?? undefined,

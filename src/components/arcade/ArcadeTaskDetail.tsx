@@ -297,9 +297,9 @@ export function ArcadeTaskDetail({
                   )}
                 </div>
               </div>
-              {(currentList?.points ?? 0) > 0 && (
+              {(task.points != null ? task.points : (currentList?.points ?? 0)) > 0 && (
                 <span className="text-[11px] font-bold px-2 py-1 rounded-full shrink-0" style={{ background: "#facc1522", color: "#facc15" }}>
-                  💎 {currentList!.points}
+                  💎 {task.points != null ? task.points : currentList!.points}
                 </span>
               )}
             </div>
