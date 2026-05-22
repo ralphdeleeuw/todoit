@@ -36,6 +36,7 @@ export interface TaskFormData {
   labelIds: string[];
   isRecurring: boolean;
   recurrenceInterval: number;
+  points: number | null;
 }
 
 interface TaskFormProps {
@@ -49,6 +50,7 @@ interface TaskFormProps {
   onCancel: () => void;
   submitLabel?: string;
   loading?: boolean;
+  effectivePoints?: number;
 }
 
 export function TaskForm({
@@ -62,6 +64,7 @@ export function TaskForm({
   onCancel,
   submitLabel = "Opslaan",
   loading = false,
+  effectivePoints,
 }: TaskFormProps) {
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
@@ -76,6 +79,9 @@ export function TaskForm({
   const [isRecurring, setIsRecurring] = useState(initialData?.isRecurring ?? false);
   const [recurrenceInterval, setRecurrenceInterval] = useState(
     initialData?.recurrenceInterval ?? 7
+  );
+  const [points, setPoints] = useState<string>(
+    initialData?.points != null ? String(initialData.points) : ""
   );
 
   function toggleLabel(id: string) {
@@ -98,6 +104,7 @@ export function TaskForm({
       labelIds: selectedLabels,
       isRecurring,
       recurrenceInterval,
+      points: points !== "" ? Number(points) : null,
     });
   }
 
@@ -155,13 +162,13 @@ export function TaskForm({
           />
         </div>
 
-        {isParent && members.length > 0 && (
+        {members.length > 0 && (
           <div>
             <Label.Root className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Uitvoerder
             </Label.Root>
-            <Select.Root value={assigneeId} onValueChange={setAssigneeId}>
-              <Select.Trigger className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--border)] bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <Select.Root value={assigneeId} onValueChange={isParent ? setAssigneeId : undefined} disabled={!isParent}>
+              <Select.Trigger className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--border)] bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 disabled:cursor-default">
                 <Select.Value />
                 <Select.Icon>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -192,6 +199,32 @@ export function TaskForm({
           </div>
         )}
       </div>
+
+      {isParent && (
+        <div>
+          <Label.Root
+            htmlFor="task-points"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            XP-punten
+            {effectivePoints != null && points === "" && (
+              <span className="ml-1.5 text-xs font-normal text-gray-400 dark:text-gray-500">
+                (standaard: {effectivePoints} via lijst)
+              </span>
+            )}
+          </Label.Root>
+          <input
+            id="task-points"
+            type="number"
+            min={0}
+            max={9999}
+            value={points}
+            onChange={(e) => setPoints(e.target.value)}
+            placeholder={effectivePoints != null ? String(effectivePoints) : "0"}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition"
+          />
+        </div>
+      )}
 
       <div>
         <Label.Root

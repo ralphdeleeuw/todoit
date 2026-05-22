@@ -28,11 +28,11 @@ export async function POST(req: Request, ctx: Ctx) {
     }
 
     const result = await completeTaskAndSpawnNext(taskId, user.id, permanent);
-    const taskWithList = await prisma.task.findUnique({
+    const taskWithPoints = await prisma.task.findUnique({
       where: { id: taskId },
-      select: { list: { select: { points: true } } },
+      select: { points: true, list: { select: { points: true } } },
     });
-    const points = taskWithList?.list?.points ?? 0;
+    const points = taskWithPoints?.points ?? taskWithPoints?.list?.points ?? 0;
 
     // Award XP and update streak
     const today = new Date();

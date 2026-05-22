@@ -216,6 +216,13 @@ export function TaskCard({
               </span>
             )}
 
+            {/* Points badge (task override) */}
+            {task.points != null && (
+              <span className="flex items-center gap-0.5 text-xs font-medium text-indigo-500 dark:text-indigo-400">
+                ⭐{task.points}
+              </span>
+            )}
+
             {/* Labels */}
             {task.labels.slice(0, 3).map(({ label }) => (
               <span

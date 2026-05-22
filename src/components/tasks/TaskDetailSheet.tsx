@@ -77,6 +77,7 @@ export function TaskDetailSheet({
     labelIds: task.labels.map((l) => l.label.id),
     isRecurring: task.isRecurring,
     recurrenceInterval: task.recurrenceInterval ?? 7,
+    points: task.points ?? null,
   };
 
   async function handleSubmit(data: TaskFormData) {
@@ -97,6 +98,7 @@ export function TaskDetailSheet({
           labelIds: data.labelIds,
           isRecurring: data.isRecurring,
           recurrenceInterval: data.isRecurring ? data.recurrenceInterval : null,
+          points: data.points,
         }),
       });
       if (!res.ok) {
@@ -170,6 +172,7 @@ export function TaskDetailSheet({
               onCancel={() => onOpenChange(false)}
               submitLabel="Wijzigingen opslaan"
               loading={loading}
+              effectivePoints={task.list?.points ?? undefined}
             />
             <div className="mt-2 border-t border-[var(--border)] pt-4">
               <SubtaskList
