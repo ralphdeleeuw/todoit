@@ -34,11 +34,14 @@ export async function POST(req: Request, ctx: Ctx) {
     });
     const points = taskWithPoints?.points ?? taskWithPoints?.list?.points ?? 0;
 
+    // Award XP to the assignee, not the person who ticked the box
+    const recipientId = existing.assigneeId ?? user.id;
+
     // Award XP and update streak
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+    const dbUser = await prisma.user.findUnique({ where: { id: recipientId } });
     const prevXp = dbUser?.xp ?? 0;
     const prevStreak = dbUser?.streak ?? 0;
     const lastActivity = dbUser?.lastActivityDate
@@ -62,7 +65,7 @@ export async function POST(req: Request, ctx: Ctx) {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: user.id },
+      where: { id: recipientId },
       data: {
         xp: { increment: points },
         weekXp: { increment: points },
