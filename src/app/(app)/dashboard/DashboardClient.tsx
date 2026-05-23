@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import * as Popover from "@radix-ui/react-popover";
 import useSWR from "swr";
 import { Bell, Settings, Loader2, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import Link from "next/link";
@@ -15,7 +16,7 @@ import { ArcadeTaskDetail } from "@/components/arcade/ArcadeTaskDetail";
 import { LevelUpOverlay } from "@/components/arcade/LevelUpOverlay";
 import { ComboMeter } from "@/components/arcade/ComboMeter";
 
-import { bucketTask, BUCKET_ORDER, calcLevel } from "@/lib/arcade";
+import { bucketTask, BUCKET_ORDER, BUCKET_META, calcLevel } from "@/lib/arcade";
 import type { TaskWithRelations, ArcadeMember, CompleteResult } from "@/types";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -27,6 +28,109 @@ interface UndoToast {
   timeoutId: ReturnType<typeof setTimeout>;
   completePromise: Promise<CompleteResult | null>;
   completed: boolean;
+}
+
+type NotifCategory = "overdue" | "today" | "tomorrow";
+interface NotificationItem {
+  id: string;
+  category: NotifCategory;
+  task: TaskWithRelations;
+}
+
+function NotificationPopoverContent({
+  notifications,
+  onSelectTask,
+}: {
+  notifications: NotificationItem[];
+  onSelectTask: (task: TaskWithRelations) => void;
+}) {
+  const categories: NotifCategory[] = ["overdue", "today", "tomorrow"];
+  const grouped = categories
+    .map((cat) => ({ cat, items: notifications.filter((n) => n.category === cat) }))
+    .filter((g) => g.items.length > 0);
+
+  return (
+    <div className="py-3">
+      <div
+        className="flex items-center justify-between px-4 pb-3"
+        style={{ borderBottom: "1px solid var(--arc-border)" }}
+      >
+        <span className="text-xs font-bold tracking-widest uppercase text-[var(--arc-muted)]">
+          Meldingen
+        </span>
+        {notifications.length > 0 && (
+          <span
+            className="text-[10px] font-bold px-2 py-0.5 rounded-full tabular-nums"
+            style={{ background: "var(--arc-panel)", color: "var(--arc-muted)" }}
+          >
+            {notifications.length}
+          </span>
+        )}
+      </div>
+
+      {grouped.length === 0 && (
+        <div className="flex flex-col items-center gap-2 py-8 px-4 text-center">
+          <span className="text-2xl">✅</span>
+          <p className="text-white text-sm font-semibold">Geen meldingen</p>
+          <p className="text-[11px] text-[var(--arc-muted)]">Alles staat op schema!</p>
+        </div>
+      )}
+
+      {grouped.map(({ cat, items }) => {
+        const meta = BUCKET_META[cat];
+        return (
+          <div key={cat} className="mt-3">
+            <div className="flex items-center gap-1.5 px-4 mb-1.5">
+              <span className="text-xs">{meta.emoji}</span>
+              <span
+                className="text-[10px] font-bold tracking-widest uppercase"
+                style={{ color: meta.color }}
+              >
+                {meta.label}
+              </span>
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums"
+                style={{ background: `${meta.color}22`, color: meta.color }}
+              >
+                {items.length}
+              </span>
+            </div>
+            {items.map(({ task }) => {
+              const color = task.list?.color ?? "#6366f1";
+              const dueStr = task.dueDate
+                ? new Date(task.dueDate).toLocaleDateString("nl-NL", {
+                    day: "numeric",
+                    month: "short",
+                  })
+                : null;
+              return (
+                <button
+                  key={task.id}
+                  onClick={() => onSelectTask(task)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-white/5 active:bg-white/10"
+                >
+                  <div
+                    className="w-0.5 h-8 rounded-full shrink-0"
+                    style={{ background: color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white font-medium truncate leading-snug">
+                      {task.title}
+                    </p>
+                    <p className="text-[10px] text-[var(--arc-muted)]">
+                      {dueStr}
+                      {task.list ? ` · ${task.list.name}` : ""}
+                      {task.assignee?.name ? ` · ${task.assignee.name}` : ""}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function DashboardClient() {
@@ -85,10 +189,24 @@ export default function DashboardClient() {
     ? [...members].sort((a, b) => (b.weekXp ?? 0) - (a.weekXp ?? 0)).findIndex((m) => m.id === currentUserId) + 1
     : undefined;
 
+  const [notifOpen, setNotifOpen] = useState(false);
+
   const activeTasks = (tasks ?? []).filter((t) => !t.completedAt);
   const filteredTasks = filterMemberId
     ? activeTasks.filter((t) => t.assignee?.id === filterMemberId)
     : activeTasks;
+
+  const notifications = useMemo<NotificationItem[]>(() => {
+    if (!tasks) return [];
+    const cats: NotifCategory[] = ["overdue", "today", "tomorrow"];
+    return cats.flatMap((cat) =>
+      activeTasks
+        .filter((t) => bucketTask(t.dueDate) === cat)
+        .map((t) => ({ id: t.id, category: cat, task: t }))
+    );
+  }, [tasks, activeTasks]);
+
+  const hasOverdue = notifications.some((n) => n.category === "overdue");
 
   const bucketed = BUCKET_ORDER.reduce<Record<string, TaskWithRelations[]>>(
     (acc, bucket) => { acc[bucket] = filteredTasks.filter((t) => bucketTask(t.dueDate) === bucket); return acc; },
@@ -335,10 +453,40 @@ export default function DashboardClient() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <Bell className="w-5 h-5 text-[var(--arc-muted)]" />
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500" />
-          </div>
+          <Popover.Root open={notifOpen} onOpenChange={setNotifOpen}>
+            <Popover.Trigger asChild>
+              <button
+                className="relative p-1 rounded-xl transition-colors hover:bg-white/10 active:scale-95"
+                aria-label="Meldingen"
+              >
+                <Bell className="w-5 h-5 text-[var(--arc-muted)]" />
+                {hasOverdue && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500" />
+                )}
+              </button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                align="end"
+                sideOffset={8}
+                className="z-50 w-[min(340px,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto outline-none"
+                style={{
+                  background: "var(--arc-panel-2)",
+                  border: "1px solid var(--arc-border-str)",
+                  borderRadius: "16px",
+                  boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
+                }}
+              >
+                <NotificationPopoverContent
+                  notifications={notifications}
+                  onSelectTask={(task) => {
+                    setNotifOpen(false);
+                    setSelectedTask(task);
+                  }}
+                />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
           <Link href="/settings">
             <Settings className="w-5 h-5 text-[var(--arc-muted)]" />
           </Link>
