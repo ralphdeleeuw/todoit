@@ -28,6 +28,11 @@ export async function POST(_req: Request, ctx: Ctx) {
       data: { completedAt: null },
     });
 
+    // Remove any unfinished child task that was spawned when this task was completed
+    await prisma.task.deleteMany({
+      where: { parentTaskId: taskId, completedAt: null },
+    });
+
     // Reverse XP (don't go below 0)
     const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
     const currentXp = dbUser?.xp ?? 0;
