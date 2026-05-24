@@ -184,7 +184,7 @@ export function TaskDetailSheet({
 
             {task.isRecurring && (
               <div className="mt-4 border-t border-[var(--border)] pt-4">
-                <RecurrenceHistory history={history} />
+                <RecurrenceHistory history={history} taskId={task.id} />
               </div>
             )}
           </div>

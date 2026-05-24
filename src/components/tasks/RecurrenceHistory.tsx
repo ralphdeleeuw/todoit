@@ -2,12 +2,15 @@
 
 import { format, subMonths, startOfMonth, eachMonthOfInterval } from "date-fns";
 import { nl } from "date-fns/locale";
+import { useRouter } from "next/navigation";
 
 interface RecurrenceHistoryProps {
   history: Array<{ id: string; completedAt: string }>;
+  taskId: string;
 }
 
-export function RecurrenceHistory({ history }: RecurrenceHistoryProps) {
+export function RecurrenceHistory({ history, taskId }: RecurrenceHistoryProps) {
+  const router = useRouter();
   const completedDates = history.map((h) => new Date(h.completedAt));
 
   const now = new Date();
@@ -39,7 +42,14 @@ export function RecurrenceHistory({ history }: RecurrenceHistoryProps) {
               const pct = count / maxCount;
               const barH = Math.max(pct * 48, count > 0 ? 4 : 0);
               return (
-                <div key={key} className="flex-1 flex flex-col items-center gap-0.5">
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => count > 0 && router.push(`/task/${taskId}/month/${key}`)}
+                  className="flex-1 flex flex-col items-center gap-0.5 group"
+                  style={{ cursor: count > 0 ? "pointer" : "default" }}
+                  title={count > 0 ? `${count}× voltooid – bekijk ${format(m, "MMMM", { locale: nl })}` : undefined}
+                >
                   <div className="w-full flex items-end justify-center">
                     <div
                       className="w-full rounded-t-sm transition-all"
@@ -52,7 +62,7 @@ export function RecurrenceHistory({ history }: RecurrenceHistoryProps) {
                   {count > 0 && (
                     <span className="text-[9px] font-bold" style={{ color: "#6366f1" }}>{count}</span>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>

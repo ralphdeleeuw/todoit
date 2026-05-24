@@ -388,7 +388,7 @@ export function ArcadeTaskDetail({
                 className="rounded-2xl p-3"
                 style={{ background: "var(--arc-panel-2)", border: "1px solid var(--arc-border)" }}
               >
-                <RecurrenceHistory history={history} />
+                <RecurrenceHistory history={history} taskId={task.id} />
               </div>
             )}
 
