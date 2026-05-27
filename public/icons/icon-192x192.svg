@@ -1,44 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#7c2d12"/>
-      <stop offset="100%" stop-color="#1c1917"/>
+      <stop offset="0%" stop-color="#16a34a"/>
+      <stop offset="100%" stop-color="#064e3b"/>
     </linearGradient>
-    <radialGradient id="mane" cx="50%" cy="60%">
-      <stop offset="0%" stop-color="#fde047"/>
-      <stop offset="40%" stop-color="#f97316"/>
-      <stop offset="100%" stop-color="#9a3412"/>
-    </radialGradient>
   </defs>
-  <rect width="192" height="192" rx="38" fill="url(#bg)"/>
-  <!-- Flame mane petals -->
-  <ellipse cx="96" cy="40" rx="14" ry="28" fill="#f97316" opacity=".9"/>
-  <ellipse cx="130" cy="50" rx="12" ry="24" fill="#f97316" opacity=".85" transform="rotate(35 130 50)"/>
-  <ellipse cx="62" cy="50" rx="12" ry="24" fill="#f97316" opacity=".85" transform="rotate(-35 62 50)"/>
-  <ellipse cx="148" cy="72" rx="12" ry="22" fill="#ea580c" opacity=".8" transform="rotate(65 148 72)"/>
-  <ellipse cx="44" cy="72" rx="12" ry="22" fill="#ea580c" opacity=".8" transform="rotate(-65 44 72)"/>
-  <!-- Mane base -->
-  <circle cx="96" cy="90" r="58" fill="url(#mane)"/>
-  <!-- Face -->
-  <circle cx="96" cy="94" r="44" fill="#fef3c7"/>
-  <!-- Fierce brow -->
-  <path d="M65 82 Q76 76 87 82 Q76 86 65 82 Z" fill="#1c1917"/>
-  <path d="M105 82 Q116 76 127 82 Q116 86 105 82 Z" fill="#1c1917"/>
-  <!-- Eyes -->
-  <circle cx="76" cy="82" r="7" fill="#1c1917"/>
-  <circle cx="116" cy="82" r="7" fill="#1c1917"/>
-  <circle cx="76" cy="82" r="4" fill="#f97316"/>
-  <circle cx="116" cy="82" r="4" fill="#f97316"/>
-  <circle cx="78" cy="80" r="1.5" fill="white"/>
-  <circle cx="118" cy="80" r="1.5" fill="white"/>
-  <!-- Muzzle -->
-  <ellipse cx="96" cy="106" rx="18" ry="11" fill="#fde68a"/>
-  <!-- Nose -->
-  <path d="M89 102 L96 109 L103 102 Z" fill="#9a3412"/>
-  <!-- Mouth -->
-  <path d="M82 114 Q96 126 110 114" stroke="#9a3412" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-  <!-- Checkmark badge -->
-  <circle cx="150" cy="150" r="29" fill="#166534"/>
-  <circle cx="150" cy="150" r="22" fill="#16a34a"/>
-  <polyline points="139,150 147,159 163,138" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect width="192" height="192" rx="41" fill="url(#bg)"/>
+  <circle cx="96" cy="86" r="58" fill="white" opacity="0.12"/>
+  <circle cx="96" cy="86" r="49" fill="white" opacity="0.10"/>
+  <polyline points="58,86 82,110 135,58" stroke="white" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <text x="96" y="168" font-family="system-ui, -apple-system, sans-serif" font-size="27" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-1" opacity="0.95">todoit</text>
 </svg>

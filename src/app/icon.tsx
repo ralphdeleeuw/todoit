@@ -13,57 +13,62 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #7c2d12, #1c1917)",
-          borderRadius: 100,
+          background: "linear-gradient(135deg, #16a34a, #064e3b)",
+          borderRadius: 110,
           position: "relative",
         }}
       >
-        {/* Flame glow ring */}
         <div
           style={{
             position: "absolute",
-            width: 360,
-            height: 360,
+            top: 75,
+            left: 101,
+            width: 310,
+            height: 310,
             borderRadius: "50%",
-            background: "radial-gradient(circle, #f97316 0%, #9a3412 60%, transparent 100%)",
+            background: "rgba(255,255,255,0.12)",
             display: "flex",
-            top: 56,
-            left: 76,
           }}
         />
-        {/* Lion */}
-        <div style={{ fontSize: 280, lineHeight: 1, zIndex: 1, marginTop: -20, display: "flex" }}>🦁</div>
-        {/* Checkmark badge */}
         <div
           style={{
             position: "absolute",
-            bottom: 48,
-            right: 48,
-            width: 148,
-            height: 148,
+            top: 100,
+            left: 126,
+            width: 260,
+            height: 260,
             borderRadius: "50%",
-            background: "#166534",
+            background: "rgba(255,255,255,0.10)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+          }}
+        />
+        <svg
+          width="512"
+          height="512"
+          viewBox="0 0 512 512"
+          style={{ position: "absolute", top: 0, left: 0, display: "flex" }}
+        >
+          <polyline
+            points="156,230 220,294 360,154"
+            stroke="white"
+            strokeWidth={52}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 44,
+            fontSize: 72,
+            fontWeight: 900,
+            color: "rgba(255,255,255,0.95)",
+            letterSpacing: -2,
+            display: "flex",
           }}
         >
-          <div
-            style={{
-              width: 118,
-              height: 118,
-              borderRadius: "50%",
-              background: "#16a34a",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 72,
-              color: "white",
-              fontWeight: "bold",
-            }}
-          >
-            ✓
-          </div>
+          todoit
         </div>
       </div>
     ),

@@ -6,9 +6,7 @@ export const runtime = "edge";
 export async function GET(req: NextRequest) {
   const size = parseInt(new URL(req.url).searchParams.get("size") ?? "512");
   const w = size <= 192 ? 192 : 512;
-
-  const scale = w / 192;
-  const r = Math.round(38 * scale);
+  const s = w / 512;
 
   return new ImageResponse(
     (
@@ -19,68 +17,62 @@ export async function GET(req: NextRequest) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #7c2d12, #1c1917)",
-          borderRadius: r,
+          background: "linear-gradient(135deg, #16a34a, #064e3b)",
+          borderRadius: Math.round(110 * s),
           position: "relative",
         }}
       >
-        {/* Flame glow */}
         <div
           style={{
             position: "absolute",
-            width: Math.round(310 * scale),
-            height: Math.round(310 * scale),
+            top: Math.round(75 * s),
+            left: Math.round(101 * s),
+            width: Math.round(310 * s),
+            height: Math.round(310 * s),
             borderRadius: "50%",
-            background:
-              "radial-gradient(circle, #f97316 0%, #9a3412 55%, transparent 100%)",
+            background: "rgba(255,255,255,0.12)",
             display: "flex",
-            top: Math.round(30 * scale),
-            left: Math.round(40 * scale),
           }}
         />
-        {/* Lion */}
-        <div
-          style={{
-            fontSize: Math.round(240 * scale),
-            lineHeight: 1,
-            zIndex: 1,
-            marginTop: Math.round(-16 * scale),
-            display: "flex",
-          }}
-        >
-          🦁
-        </div>
-        {/* Checkmark badge */}
         <div
           style={{
             position: "absolute",
-            bottom: Math.round(10 * scale),
-            right: Math.round(10 * scale),
-            width: Math.round(66 * scale),
-            height: Math.round(66 * scale),
+            top: Math.round(100 * s),
+            left: Math.round(126 * s),
+            width: Math.round(260 * s),
+            height: Math.round(260 * s),
             borderRadius: "50%",
-            background: "#166534",
+            background: "rgba(255,255,255,0.10)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+          }}
+        />
+        <svg
+          width={w}
+          height={w}
+          viewBox="0 0 512 512"
+          style={{ position: "absolute", top: 0, left: 0, display: "flex" }}
+        >
+          <polyline
+            points="156,230 220,294 360,154"
+            stroke="white"
+            strokeWidth={52}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+        <div
+          style={{
+            position: "absolute",
+            bottom: Math.round(44 * s),
+            fontSize: Math.round(72 * s),
+            fontWeight: 900,
+            color: "rgba(255,255,255,0.95)",
+            letterSpacing: -2,
+            display: "flex",
           }}
         >
-          <div
-            style={{
-              width: Math.round(52 * scale),
-              height: Math.round(52 * scale),
-              borderRadius: "50%",
-              background: "#16a34a",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: Math.round(32 * scale),
-              color: "white",
-              fontWeight: "bold",
-            }}
-          >
-            ✓
-          </div>
+          todoit
         </div>
       </div>
     ),

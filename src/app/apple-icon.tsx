@@ -13,54 +13,62 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #7c2d12, #1c1917)",
-          borderRadius: 36,
+          background: "linear-gradient(135deg, #16a34a, #064e3b)",
+          borderRadius: 39,
           position: "relative",
         }}
       >
         <div
           style={{
             position: "absolute",
-            width: 126,
-            height: 126,
+            top: 26,
+            left: 35,
+            width: 109,
+            height: 109,
             borderRadius: "50%",
-            background: "radial-gradient(circle, #f97316 0%, #9a3412 60%, transparent 100%)",
+            background: "rgba(255,255,255,0.12)",
             display: "flex",
-            top: 20,
-            left: 27,
           }}
         />
-        <div style={{ fontSize: 98, lineHeight: 1, zIndex: 1, marginTop: -8, display: "flex" }}>🦁</div>
         <div
           style={{
             position: "absolute",
-            bottom: 10,
-            right: 10,
-            width: 54,
-            height: 54,
+            top: 35,
+            left: 44,
+            width: 91,
+            height: 91,
             borderRadius: "50%",
-            background: "#166534",
+            background: "rgba(255,255,255,0.10)",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+          }}
+        />
+        <svg
+          width="180"
+          height="180"
+          viewBox="0 0 180 180"
+          style={{ position: "absolute", top: 0, left: 0, display: "flex" }}
+        >
+          <polyline
+            points="55,81 77,103 127,54"
+            stroke="white"
+            strokeWidth={18}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 14,
+            fontSize: 25,
+            fontWeight: 900,
+            color: "rgba(255,255,255,0.95)",
+            letterSpacing: -1,
+            display: "flex",
           }}
         >
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: "50%",
-              background: "#16a34a",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 26,
-              color: "white",
-              fontWeight: "bold",
-            }}
-          >
-            ✓
-          </div>
+          todoit
         </div>
       </div>
     ),
