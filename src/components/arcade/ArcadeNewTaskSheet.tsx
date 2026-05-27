@@ -42,6 +42,7 @@ const RECUR_OPTIONS = [
   { key: "",   label: "Eenmalig" },
   { key: "1",  label: "Elke dag" },
   { key: "7",  label: "Wekelijks" },
+  { key: "14", label: "2 weken" },
   { key: "5",  label: "Elke 5 dgn" },
 ];
 
