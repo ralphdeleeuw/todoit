@@ -4,7 +4,7 @@ import { useRef, useState, useCallback } from "react";
 import { useDrag } from "@use-gesture/react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Checkbox from "@radix-ui/react-checkbox";
-import { Check, Calendar, Pencil, Trash2, UserPlus } from "lucide-react";
+import { Check, Calendar, Pencil, Trash2, UserPlus, RefreshCw, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listColor } from "@/lib/arcade";
 import type { TaskWithRelations } from "@/types";
@@ -259,6 +259,24 @@ export function MissionRow({
                   }}
                 >
                   {task.list.name}
+                </span>
+              )}
+              {task.isRecurring && (
+                <span
+                  className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0"
+                  style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8" }}
+                >
+                  <RefreshCw className="w-2.5 h-2.5" />
+                  {task.recurrenceInterval ? `${task.recurrenceInterval}d` : "↻"}
+                </span>
+              )}
+              {task.subtasks.length > 0 && (
+                <span
+                  className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0"
+                  style={{ background: "rgba(255,255,255,0.07)", color: "var(--arc-muted)" }}
+                >
+                  <ListChecks className="w-2.5 h-2.5" />
+                  {task.subtasks.filter((s) => s.completedAt).length}/{task.subtasks.length}
                 </span>
               )}
               <div className="ml-auto flex items-center gap-1.5 shrink-0">
