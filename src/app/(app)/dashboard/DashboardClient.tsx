@@ -576,7 +576,22 @@ export default function DashboardClient() {
                       <p className="text-sm text-white font-medium truncate line-through opacity-50">
                         {task.title.replace(/^\p{Emoji}\s*/u, "")}
                       </p>
-                      <p className="text-[10px] text-[var(--arc-muted-deep)]">{completedStr}{task.list ? ` · ${task.list.name}` : ""}</p>
+                      <div className="flex items-center gap-1 text-[10px] text-[var(--arc-muted-deep)]">
+                        <span>{completedStr}{task.list ? ` · ${task.list.name}` : ""}</span>
+                        {task.assignee && (
+                          <>
+                            <span>·</span>
+                            {task.assignee.image ? (
+                              <img src={task.assignee.image} alt={task.assignee.name ?? ""} className="w-3.5 h-3.5 rounded-full" />
+                            ) : (
+                              <span className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center text-[8px] font-bold">
+                                {task.assignee.name?.[0]?.toUpperCase()}
+                              </span>
+                            )}
+                            <span>{task.assignee.name}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                     <button
                       onClick={() => handleUncomplete(task)}
