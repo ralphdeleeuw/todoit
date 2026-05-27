@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6d28d9"/>
+      <stop offset="100%" style="stop-color:#1e1b4b"/>
+    </linearGradient>
+    <radialGradient id="starglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#a78bfa;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bg5)"/>
+  <!-- Subtle glow -->
+  <circle cx="256" cy="256" r="220" fill="url(#starglow)"/>
+
+  <!-- Stars in background -->
+  <circle cx="100" cy="100" r="4" fill="white" opacity="0.6"/>
+  <circle cx="400" cy="130" r="3" fill="white" opacity="0.5"/>
+  <circle cx="430" cy="280" r="5" fill="white" opacity="0.4"/>
+  <circle cx="80" cy="340" r="3" fill="white" opacity="0.5"/>
+  <circle cx="140" cy="420" r="4" fill="white" opacity="0.3"/>
+  <circle cx="380" cy="420" r="3" fill="white" opacity="0.4"/>
+  <circle cx="460" cy="180" r="3" fill="white" opacity="0.6"/>
+  <circle cx="60" cy="200" r="4" fill="white" opacity="0.4"/>
+
+  <!-- Rocket -->
+  <text x="256" y="290" font-size="240" text-anchor="middle" dominant-baseline="middle">🚀</text>
+
+  <!-- Checkmark badge -->
+  <circle cx="360" cy="368" r="70" fill="#166534"/>
+  <circle cx="360" cy="368" r="56" fill="#16a34a"/>
+  <polyline points="336,368 353,385 388,349" stroke="white" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

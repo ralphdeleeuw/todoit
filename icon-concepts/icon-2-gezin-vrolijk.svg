@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1d4ed8"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <radialGradient id="glow2" cx="50%" cy="45%" r="45%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:0.5"/>
+      <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bg2)"/>
+  <!-- Soft glow -->
+  <ellipse cx="256" cy="230" rx="200" ry="180" fill="url(#glow2)"/>
+
+  <!-- Checklist lines -->
+  <!-- Row 1 - checked -->
+  <rect x="120" y="130" width="272" height="52" rx="10" fill="#1e3a5f" opacity="0.8"/>
+  <circle cx="152" cy="156" r="16" fill="#16a34a"/>
+  <polyline points="144,156 150,163 162,149" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="180" y="148" width="140" height="10" rx="5" fill="#94a3b8" opacity="0.6"/>
+  <line x1="180" y1="153" x2="320" y2="153" stroke="#94a3b8" stroke-width="2" opacity="0.4"/>
+
+  <!-- Row 2 - checked -->
+  <rect x="120" y="198" width="272" height="52" rx="10" fill="#1e3a5f" opacity="0.8"/>
+  <circle cx="152" cy="224" r="16" fill="#16a34a"/>
+  <polyline points="144,224 150,231 162,217" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="180" y="216" width="110" height="10" rx="5" fill="#94a3b8" opacity="0.6"/>
+  <line x1="180" y1="221" x2="290" y2="221" stroke="#94a3b8" stroke-width="2" opacity="0.4"/>
+
+  <!-- Row 3 - open -->
+  <rect x="120" y="266" width="272" height="52" rx="10" fill="#1e3a5f" opacity="0.8"/>
+  <circle cx="152" cy="292" r="16" fill="none" stroke="#475569" stroke-width="3"/>
+  <rect x="180" y="284" width="160" height="10" rx="5" fill="#94a3b8" opacity="0.6"/>
+
+  <!-- Row 4 - open -->
+  <rect x="120" y="334" width="272" height="52" rx="10" fill="#1e3a5f" opacity="0.8"/>
+  <circle cx="152" cy="360" r="16" fill="none" stroke="#475569" stroke-width="3"/>
+  <rect x="180" y="352" width="120" height="10" rx="5" fill="#94a3b8" opacity="0.6"/>
+
+  <!-- Plus button bottom right -->
+  <circle cx="364" cy="400" r="52" fill="#2563eb"/>
+  <circle cx="364" cy="400" r="44" fill="#3b82f6"/>
+  <line x1="364" y1="380" x2="364" y2="420" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <line x1="344" y1="400" x2="384" y2="400" stroke="white" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- App name -->
+  <text x="256" y="475" font-family="system-ui, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle" opacity="0.9">todoit</text>
+</svg>
