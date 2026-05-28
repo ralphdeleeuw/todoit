@@ -37,7 +37,7 @@ const EFFECT_CONFIG: Record<string, { particles: string[]; colors: string[] }> =
   },
 };
 
-export const EFFECT_DURATION = 1500;
+export const EFFECT_DURATION = 2000;
 
 export function CompletionEffect({ effect, show, onDismiss }: CompletionEffectProps) {
   const [mounted, setMounted] = useState(false);
@@ -95,7 +95,7 @@ export function CompletionEffect({ effect, show, onDismiss }: CompletionEffectPr
                   rotate: p.rotate,
                 }}
                 transition={{
-                  duration: 1.3,
+                  duration: 1.8,
                   delay: p.delay,
                   ease: [0.15, 0.85, 0.35, 1],
                 }}
