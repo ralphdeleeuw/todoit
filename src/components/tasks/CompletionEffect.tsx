@@ -37,7 +37,7 @@ const EFFECT_CONFIG: Record<string, { particles: string[]; colors: string[] }> =
   },
 };
 
-export const EFFECT_DURATION = 2000;
+export const EFFECT_DURATION = 2200;
 
 export function CompletionEffect({ effect, show, onDismiss }: CompletionEffectProps) {
   const [mounted, setMounted] = useState(false);
@@ -88,16 +88,20 @@ export function CompletionEffect({ effect, show, onDismiss }: CompletionEffectPr
                 key={p.id}
                 initial={{ opacity: 1, x: 0, y: 0, scale: p.scale, rotate: 0 }}
                 animate={{
-                  opacity: 0,
+                  opacity: [1, 1, 0],
                   x: p.x,
                   y: p.y,
-                  scale: p.scale * 0.2,
+                  scale: [p.scale, p.scale, p.scale * 0.3],
                   rotate: p.rotate,
                 }}
                 transition={{
-                  duration: 1.8,
+                  duration: 2,
                   delay: p.delay,
-                  ease: [0.15, 0.85, 0.35, 1],
+                  opacity: { times: [0, 0.65, 1], ease: "easeIn" },
+                  scale: { times: [0, 0.65, 1], ease: "easeOut" },
+                  x: { ease: "easeOut" },
+                  y: { ease: "easeOut" },
+                  rotate: { ease: "easeOut" },
                 }}
                 className="absolute -translate-x-1/2 -translate-y-1/2 select-none leading-none"
                 style={{ color: p.color, fontSize: p.size }}
