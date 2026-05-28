@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { isOverdue } from "@/lib/utils";
 import type { TaskWithRelations } from "@/types";
 import { TaskDetailSheet } from "./TaskDetailSheet";
-import { CompletionEffect } from "./CompletionEffect";
+import { CompletionEffect, EFFECT_DURATION } from "./CompletionEffect";
 import { format, isToday } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -95,8 +95,13 @@ export function TaskCard({
         body: JSON.stringify({ permanent }),
       });
       if (res.ok) {
-        setShowEffect(true);
-        setTimeout(() => onCompleted(task.id), 400);
+        const effect = task.list?.effect ?? "none";
+        if (effect !== "none") {
+          setShowEffect(true);
+          // onCompleted is called via onDismiss after the animation
+        } else {
+          onCompleted(task.id);
+        }
       }
     } finally {
       setCompleting(false);
@@ -142,7 +147,7 @@ export function TaskCard({
           <CompletionEffect
             effect={task.list?.effect ?? "none"}
             show={showEffect}
-            onDismiss={() => setShowEffect(false)}
+            onDismiss={() => { setShowEffect(false); onCompleted(task.id); }}
           />
         </div>
 

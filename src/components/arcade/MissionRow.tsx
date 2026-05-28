@@ -8,6 +8,7 @@ import { Check, Calendar, Pencil, Trash2, UserPlus, RefreshCw, ListChecks } from
 import { cn } from "@/lib/utils";
 import { listColor } from "@/lib/arcade";
 import type { TaskWithRelations } from "@/types";
+import { CompletionEffect, EFFECT_DURATION } from "@/components/tasks/CompletionEffect";
 
 interface MissionRowProps {
   task: TaskWithRelations;
@@ -36,6 +37,7 @@ export function MissionRow({
   const [completing, setCompleting] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [floater, setFloater] = useState<string | null>(null);
+  const [showEffect, setShowEffect] = useState(false);
 
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gestureMode = useRef<"idle" | "swipe" | "longpress">("idle");
@@ -121,9 +123,11 @@ export function MissionRow({
     setCompleting(true);
     navigator.vibrate?.(30);
     setFloater(`+${task.list?.points ?? 0} XP`);
+    const effect = task.list?.effect ?? "none";
+    if (effect !== "none") setShowEffect(true);
     setTimeout(() => {
       onComplete();
-    }, 600);
+    }, effect !== "none" ? EFFECT_DURATION : 600);
   }
 
   async function handleClaim(e: React.MouseEvent) {
@@ -318,6 +322,12 @@ export function MissionRow({
           </div>
         </div>
       </motion.div>
+
+      <CompletionEffect
+        effect={task.list?.effect ?? "none"}
+        show={showEffect}
+        onDismiss={() => setShowEffect(false)}
+      />
 
       {/* XP floater */}
       <AnimatePresence onExitComplete={() => setFloater(null)}>
