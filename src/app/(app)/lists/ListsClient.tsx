@@ -16,6 +16,7 @@ interface ListItem {
   name: string;
   color: string | null;
   points: number;
+  effect: string;
   visibility: Visibility;
   ownerId: string | null;
   memberIds: string[];
@@ -42,6 +43,16 @@ const COLORS = [
   "#3b82f6", "#64748b",
 ];
 
+const EFFECTS = [
+  { value: "none",      emoji: "—",  label: "Geen" },
+  { value: "confetti",  emoji: "🎊", label: "Confetti" },
+  { value: "stars",     emoji: "⭐", label: "Sterren" },
+  { value: "hearts",    emoji: "❤️", label: "Hartjes" },
+  { value: "fireworks", emoji: "🎆", label: "Vuurwerk" },
+  { value: "bubbles",   emoji: "🫧", label: "Bellen" },
+  { value: "raindrops", emoji: "🌈", label: "Regenboog" },
+];
+
 const LIST_EMOJIS: Record<string, string> = {
   huishouden: "🧹", school: "📚", kamperen: "🏕️", klusjes: "🔧",
   boodschappen: "🛒", sport: "💪", werk: "💼", planning: "📅",
@@ -59,6 +70,7 @@ interface FormState {
   name: string;
   color: string;
   points: number;
+  effect: string;
   visibility: Visibility;
   memberIds: string[];
 }
@@ -76,6 +88,7 @@ function ListForm({
   const [name, setName] = useState(initial.name);
   const [color, setColor] = useState(initial.color || COLORS[0]);
   const [points, setPoints] = useState(initial.points);
+  const [effect, setEffect] = useState(initial.effect || "none");
   const [visibility, setVisibility] = useState<Visibility>(initial.visibility);
   const [memberIds, setMemberIds] = useState<string[]>(initial.memberIds);
   const otherMembers = members.filter((m) => m.id !== currentUserId);
@@ -87,7 +100,7 @@ function ListForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    onSave({ name: name.trim(), color, points, visibility, memberIds });
+    onSave({ name: name.trim(), color, points, effect, visibility, memberIds });
   }
 
   return (
@@ -130,6 +143,28 @@ function ListForm({
               }
             >
               💎 {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-[10px] font-bold tracking-widest uppercase text-[var(--arc-muted)] mb-2">Effect bij voltooien</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          {EFFECTS.map((e) => (
+            <button
+              key={e.value}
+              type="button"
+              onClick={() => setEffect(e.value)}
+              className={cn("flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all", effect === e.value ? "text-white" : "text-[var(--arc-muted)]")}
+              style={effect === e.value
+                ? { background: "linear-gradient(135deg, var(--xp-accent), var(--accent-primary))" }
+                : { background: "var(--arc-panel-2)", border: "1px solid var(--arc-border)" }
+              }
+              title={e.label}
+            >
+              <span className="text-base leading-none">{e.emoji}</span>
+              <span className="text-[10px]">{e.label}</span>
             </button>
           ))}
         </div>
@@ -198,13 +233,14 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
       const res = await fetch("/api/lists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.name, color: data.color, points: data.points, visibility: data.visibility, memberIds: data.memberIds }),
+        body: JSON.stringify({ name: data.name, color: data.color, points: data.points, effect: data.effect, visibility: data.visibility, memberIds: data.memberIds }),
       });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? "Mislukt"); return; }
       const newList = await res.json();
       setLists((prev) => [...prev, {
         id: newList.id, name: newList.name, color: newList.color,
         points: newList.points ?? 10,
+        effect: newList.effect ?? "none",
         visibility: newList.visibility, ownerId: newList.ownerId,
         memberIds: (newList.members ?? []).map((m: { userId: string }) => m.userId),
         taskCount: 0,
@@ -220,12 +256,13 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
       const res = await fetch(`/api/lists/${listId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.name, color: data.color, points: data.points, visibility: data.visibility, memberIds: data.memberIds }),
+        body: JSON.stringify({ name: data.name, color: data.color, points: data.points, effect: data.effect, visibility: data.visibility, memberIds: data.memberIds }),
       });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? "Mislukt"); return; }
       const updated = await res.json();
       setLists((prev) => prev.map((l) => l.id === listId ? {
-        ...l, name: updated.name, color: updated.color, points: updated.points ?? l.points, visibility: updated.visibility,
+        ...l, name: updated.name, color: updated.color, points: updated.points ?? l.points,
+        effect: updated.effect ?? l.effect, visibility: updated.visibility,
         memberIds: (updated.members ?? []).map((m: { userId: string }) => m.userId),
       } : l));
       setEditingList(null);
@@ -348,7 +385,7 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
             </div>
             <div className="px-4 pb-8">
               <ListForm
-                initial={{ name: "", color: COLORS[0], points: 10, visibility: "FAMILY", memberIds: [] }}
+                initial={{ name: "", color: COLORS[0], points: 10, effect: "none", visibility: "FAMILY", memberIds: [] }}
                 members={members}
                 currentUserId={currentUserId}
                 onSave={handleCreate}
@@ -377,7 +414,7 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
             {editingList && (
               <div className="px-4 pb-8">
                 <ListForm
-                  initial={{ name: editingList.name, color: editingList.color ?? COLORS[0], points: editingList.points, visibility: editingList.visibility, memberIds: editingList.memberIds }}
+                  initial={{ name: editingList.name, color: editingList.color ?? COLORS[0], points: editingList.points, effect: editingList.effect ?? "none", visibility: editingList.visibility, memberIds: editingList.memberIds }}
                   members={members}
                   currentUserId={currentUserId}
                   onSave={(data) => handleEdit(editingList.id, data)}

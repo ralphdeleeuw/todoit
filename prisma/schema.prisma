@@ -124,6 +124,7 @@ model TaskList {
   name       String
   color      String?
   points     Int            @default(10)
+  effect     String         @default("none")
   familyId   String
   family     Family         @relation(fields: [familyId], references: [id])
   ownerId    String?

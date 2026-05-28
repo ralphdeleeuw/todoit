@@ -11,7 +11,7 @@ export type SubtaskSummary = {
 export type TaskWithRelations = Task & {
   assignee: Pick<User, "id" | "name" | "image"> | null;
   createdBy: Pick<User, "id" | "name"> | null;
-  list: Pick<TaskList, "id" | "name" | "color" | "points"> | null;
+  list: Pick<TaskList, "id" | "name" | "color" | "points" | "effect"> | null;
   labels: { label: Pick<Label, "id" | "name" | "color"> }[];
   subtasks: SubtaskSummary[];
 };

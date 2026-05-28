@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { isOverdue } from "@/lib/utils";
 import type { TaskWithRelations } from "@/types";
 import { TaskDetailSheet } from "./TaskDetailSheet";
+import { CompletionEffect } from "./CompletionEffect";
 import { format, isToday } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -21,6 +22,7 @@ interface TaskList {
   id: string;
   name: string;
   color: string | null;
+  effect?: string | null;
 }
 
 interface TaskLabel {
@@ -69,6 +71,7 @@ export function TaskCard({
   const [completing, setCompleting] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [recurringDialogOpen, setRecurringDialogOpen] = useState(false);
+  const [showEffect, setShowEffect] = useState(false);
   const isCompleted = !!task.completedAt;
 
   async function handleClaim(e: React.MouseEvent) {
@@ -91,7 +94,10 @@ export function TaskCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ permanent }),
       });
-      if (res.ok) onCompleted(task.id);
+      if (res.ok) {
+        setShowEffect(true);
+        setTimeout(() => onCompleted(task.id), 400);
+      }
     } finally {
       setCompleting(false);
     }
@@ -119,19 +125,26 @@ export function TaskCard({
         )}
       >
         {/* Checkbox */}
-        <button
-          disabled={isCompleted || completing}
-          className={cn(
-            "mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
-            isCompleted
-              ? "bg-indigo-600 border-indigo-600"
-              : "border-gray-300 dark:border-gray-600 hover:border-indigo-500 dark:hover:border-indigo-400"
-          )}
-          onClick={handleComplete}
-          aria-label={isCompleted ? "Taak voltooid" : "Markeer als voltooid"}
-        >
-          {(isCompleted || completing) && <Check className="w-3 h-3 text-white" />}
-        </button>
+        <div className="relative shrink-0 mt-0.5">
+          <button
+            disabled={isCompleted || completing}
+            className={cn(
+              "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+              isCompleted
+                ? "bg-indigo-600 border-indigo-600"
+                : "border-gray-300 dark:border-gray-600 hover:border-indigo-500 dark:hover:border-indigo-400"
+            )}
+            onClick={handleComplete}
+            aria-label={isCompleted ? "Taak voltooid" : "Markeer als voltooid"}
+          >
+            {(isCompleted || completing) && <Check className="w-3 h-3 text-white" />}
+          </button>
+          <CompletionEffect
+            effect={task.list?.effect ?? "none"}
+            show={showEffect}
+            onDismiss={() => setShowEffect(false)}
+          />
+        </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
