@@ -21,18 +21,16 @@ export async function GET(req: Request) {
 
     const where: Record<string, unknown> = { familyId: user.familyId, subtaskParentId: null };
 
+    const childFilter = user.role !== "PARENT"
+      ? [{ openForClaim: true }, { assigneeId: user.id }, { createdById: user.id }]
+      : null;
+
     if (listId) {
-      // Specific list view — list-level access is assumed (user navigated here intentionally)
       where.listId = listId;
+      if (childFilter) where.OR = childFilter;
     } else {
-      // Visibility-based filtering: tasks on FAMILY/SHARED lists are visible to all;
-      // tasks with no list or on a PRIVATE list are only visible to their assignee/creator.
-      where.OR = [
-        { openForClaim: true },
-        { list: { visibility: { in: ["FAMILY", "SHARED"] } } },
-        { listId: null, OR: [{ assigneeId: user.id }, { createdById: user.id }] },
-        { list: { visibility: "PRIVATE" }, OR: [{ assigneeId: user.id }, { createdById: user.id }] },
-      ];
+      if (childFilter) where.OR = childFilter;
+      // PARENT: familyId-filter volstaat
     }
 
     if (assigneeId && user.role === "PARENT") where.assigneeId = assigneeId;
