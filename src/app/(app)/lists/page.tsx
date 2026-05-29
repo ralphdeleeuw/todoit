@@ -42,6 +42,7 @@ export default async function ListsPage() {
     visibility: l.visibility,
     ownerId: l.ownerId,
     memberIds: l.members.map((m) => m.userId),
+    defaultAssigneeId: l.defaultAssigneeId,
     taskCount: l._count.tasks,
   }));
 

@@ -20,6 +20,7 @@ interface ListItem {
   visibility: Visibility;
   ownerId: string | null;
   memberIds: string[];
+  defaultAssigneeId: string | null;
   taskCount: number;
 }
 
@@ -73,14 +74,18 @@ interface FormState {
   effect: string;
   visibility: Visibility;
   memberIds: string[];
+  defaultAssigneeId: string | null;
 }
 
+const OPEN_FOR_CLAIM = "__open__";
+
 function ListForm({
-  initial, members, currentUserId, onSave, onCancel, saving,
+  initial, members, currentUserId, isParent, onSave, onCancel, saving,
 }: {
   initial: FormState;
   members: Member[];
   currentUserId: string;
+  isParent: boolean;
   onSave: (data: FormState) => void;
   onCancel: () => void;
   saving: boolean;
@@ -91,6 +96,7 @@ function ListForm({
   const [effect, setEffect] = useState(initial.effect || "none");
   const [visibility, setVisibility] = useState<Visibility>(initial.visibility);
   const [memberIds, setMemberIds] = useState<string[]>(initial.memberIds);
+  const [defaultAssigneeId, setDefaultAssigneeId] = useState<string | null>(initial.defaultAssigneeId);
   const otherMembers = members.filter((m) => m.id !== currentUserId);
 
   function toggleMember(id: string) {
@@ -100,7 +106,7 @@ function ListForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    onSave({ name: name.trim(), color, points, effect, visibility, memberIds });
+    onSave({ name: name.trim(), color, points, effect, visibility, memberIds, defaultAssigneeId });
   }
 
   return (
@@ -189,6 +195,26 @@ function ListForm({
         </div>
       </div>
 
+      {isParent && (
+        <div>
+          <p className="text-[10px] font-bold tracking-widest uppercase text-[var(--arc-muted)] mb-2">
+            Standaard uitvoerder (herhalende taken)
+          </p>
+          <select
+            value={defaultAssigneeId ?? ""}
+            onChange={(e) => setDefaultAssigneeId(e.target.value === "" ? null : e.target.value)}
+            className="w-full px-3 py-2.5 rounded-xl text-sm text-white outline-none appearance-none"
+            style={{ background: "var(--arc-panel-2)", border: "1px solid var(--arc-border-str)" }}
+          >
+            <option value="">Geen standaard</option>
+            <option value={OPEN_FOR_CLAIM}>🙋 Wie pakt &apos;m</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>{m.name ?? "Naamloos"}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {visibility === "SHARED" && otherMembers.length > 0 && (
         <div className="space-y-1.5">
           {otherMembers.map((m) => (
@@ -233,7 +259,7 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
       const res = await fetch("/api/lists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.name, color: data.color, points: data.points, effect: data.effect, visibility: data.visibility, memberIds: data.memberIds }),
+        body: JSON.stringify({ name: data.name, color: data.color, points: data.points, effect: data.effect, visibility: data.visibility, memberIds: data.memberIds, defaultAssigneeId: data.defaultAssigneeId }),
       });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? "Mislukt"); return; }
       const newList = await res.json();
@@ -243,6 +269,7 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
         effect: newList.effect ?? "none",
         visibility: newList.visibility, ownerId: newList.ownerId,
         memberIds: (newList.members ?? []).map((m: { userId: string }) => m.userId),
+        defaultAssigneeId: newList.defaultAssigneeId ?? null,
         taskCount: 0,
       }]);
       setFormOpen(false);
@@ -256,7 +283,7 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
       const res = await fetch(`/api/lists/${listId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.name, color: data.color, points: data.points, effect: data.effect, visibility: data.visibility, memberIds: data.memberIds }),
+        body: JSON.stringify({ name: data.name, color: data.color, points: data.points, effect: data.effect, visibility: data.visibility, memberIds: data.memberIds, defaultAssigneeId: data.defaultAssigneeId }),
       });
       if (!res.ok) { const d = await res.json(); setError(d.error ?? "Mislukt"); return; }
       const updated = await res.json();
@@ -264,6 +291,7 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
         ...l, name: updated.name, color: updated.color, points: updated.points ?? l.points,
         effect: updated.effect ?? l.effect, visibility: updated.visibility,
         memberIds: (updated.members ?? []).map((m: { userId: string }) => m.userId),
+        defaultAssigneeId: updated.defaultAssigneeId ?? null,
       } : l));
       setEditingList(null);
       router.refresh();
@@ -385,9 +413,10 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
             </div>
             <div className="px-4 pb-8">
               <ListForm
-                initial={{ name: "", color: COLORS[0], points: 10, effect: "none", visibility: "FAMILY", memberIds: [] }}
+                initial={{ name: "", color: COLORS[0], points: 10, effect: "none", visibility: "FAMILY", memberIds: [], defaultAssigneeId: null }}
                 members={members}
                 currentUserId={currentUserId}
+                isParent={isParent}
                 onSave={handleCreate}
                 onCancel={() => setFormOpen(false)}
                 saving={saving}
@@ -414,9 +443,10 @@ export default function ListsClient({ lists: initialLists, members, currentUserI
             {editingList && (
               <div className="px-4 pb-8">
                 <ListForm
-                  initial={{ name: editingList.name, color: editingList.color ?? COLORS[0], points: editingList.points, effect: editingList.effect ?? "none", visibility: editingList.visibility, memberIds: editingList.memberIds }}
+                  initial={{ name: editingList.name, color: editingList.color ?? COLORS[0], points: editingList.points, effect: editingList.effect ?? "none", visibility: editingList.visibility, memberIds: editingList.memberIds, defaultAssigneeId: editingList.defaultAssigneeId }}
                   members={members}
                   currentUserId={currentUserId}
+                  isParent={isParent}
                   onSave={(data) => handleEdit(editingList.id, data)}
                   onCancel={() => setEditingList(null)}
                   saving={saving}

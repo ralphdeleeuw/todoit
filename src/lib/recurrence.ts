@@ -11,7 +11,7 @@ export async function completeTaskAndSpawnNext(
   const completedTask = await prisma.task.update({
     where: { id: taskId },
     data: { completedAt: new Date() },
-    include: { labels: true },
+    include: { labels: true, list: { select: { defaultAssigneeId: true } } },
   });
 
   let nextTask: Task | null = null;
@@ -28,6 +28,17 @@ export async function completeTaskAndSpawnNext(
       return { completedTask, nextTask: existingChild };
     }
 
+    const OPEN = "__open__";
+    let spawnedAssigneeId = completedTask.assigneeId;
+    let spawnedOpenForClaim = false;
+    const listDefault = (completedTask as typeof completedTask & { list: { defaultAssigneeId: string | null } | null }).list?.defaultAssigneeId;
+    if (listDefault === OPEN) {
+      spawnedAssigneeId = null;
+      spawnedOpenForClaim = true;
+    } else if (listDefault != null) {
+      spawnedAssigneeId = listDefault;
+    }
+
     nextTask = await prisma.task.create({
       data: {
         title: completedTask.title,
@@ -35,7 +46,8 @@ export async function completeTaskAndSpawnNext(
         dueDate: nextDue,
         familyId: completedTask.familyId,
         listId: completedTask.listId,
-        assigneeId: completedTask.assigneeId,
+        assigneeId: spawnedAssigneeId,
+        openForClaim: spawnedOpenForClaim,
         createdById: completedByUserId,
         isRecurring: true,
         recurrenceInterval: completedTask.recurrenceInterval,
