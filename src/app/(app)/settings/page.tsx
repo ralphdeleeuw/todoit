@@ -4,6 +4,7 @@ import { PushSubscribeButton } from "@/components/notifications/PushSubscribeBut
 import { DailyReminderToggle } from "./DailyReminderToggle";
 import { SignOutButton } from "./SignOutButton";
 import { ArcadeBottomNav } from "@/components/arcade/ArcadeBottomNav";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 
@@ -57,15 +58,7 @@ export default async function SettingsPage() {
         className="mx-4 mb-5 p-4 rounded-2xl flex items-center gap-4"
         style={{ background: "var(--arc-panel)", border: "1px solid var(--arc-border-str)" }}
       >
-        <div
-          className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-white overflow-hidden shrink-0"
-          style={{ background: "var(--accent-primary)" }}
-        >
-          {user.image
-            ? <img src={user.image} alt="" className="w-full h-full object-cover rounded-full" />
-            : <span className="text-xl">{initial}</span>
-          }
-        </div>
+        <AvatarUpload currentImage={user.image ?? null} initial={initial} size={56} />
         <div className="flex-1 min-w-0">
           <p className="font-bold text-white truncate">{user.name ?? "Naamloos"}</p>
           <p className="text-xs text-[var(--arc-muted)] truncate">{user.email}</p>
@@ -73,7 +66,7 @@ export default async function SettingsPage() {
             Level {level} · {user.role === "PARENT" ? "Ouder" : "Kind"}
           </p>
         </div>
-        <span className="text-2xl shrink-0">✏️</span>
+        <p className="text-[10px] text-[var(--arc-muted)] shrink-0">Tik om<br/>te wijzigen</p>
       </div>
 
       {/* Notifications */}
