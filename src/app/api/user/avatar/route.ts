@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
-import { put, del } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, apiError } from "@/lib/auth-helpers";
+
+const SUPABASE_URL = process.env.SUPABASE_URL ?? "https://jsxwltvcjkdvatakkbut.supabase.co";
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzeHdsdHZjamtkdmF0YWtrYnV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0OTc5NzUsImV4cCI6MjA5NDA3Mzk3NX0.SPTY3Oye8A8QArulllLDZZFrRxSyxqiqeoVFmvpirBY";
+const BUCKET = "avatars";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -28,27 +31,36 @@ export async function POST(req: Request) {
       : file.type === "image/gif" ? "gif"
       : "jpg";
 
-    const existing = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { image: true },
-    });
+    const path = `${user.id}.${ext}`;
+    const bytes = await file.arrayBuffer();
 
-    const blob = await put(`avatars/${user.id}.${ext}`, file, {
-      access: "public",
-      contentType: file.type,
-      addRandomSuffix: false,
-    });
+    const uploadRes = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": file.type,
+          "x-upsert": "true",
+        },
+        body: bytes,
+      }
+    );
 
-    if (existing?.image && existing.image.includes("public.blob.vercel-storage.com")) {
-      await del(existing.image).catch(() => null);
+    if (!uploadRes.ok) {
+      const err = await uploadRes.text();
+      console.error("Supabase Storage upload error:", err);
+      return NextResponse.json({ error: "Upload mislukt" }, { status: 500 });
     }
+
+    const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { image: blob.url },
+      data: { image: imageUrl },
     });
 
-    return NextResponse.json({ image: blob.url });
+    return NextResponse.json({ image: imageUrl });
   } catch (e) {
     return apiError(e);
   }
