@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { MotionProvider } from "@/components/MotionProvider";
 
 export const metadata: Metadata = {
   title: "Todoit",
@@ -31,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="nl" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        {children}
+        <MotionProvider>{children}</MotionProvider>
         <ServiceWorkerRegistration />
       </body>
     </html>

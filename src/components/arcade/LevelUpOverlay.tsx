@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface LevelUpOverlayProps {
   show: boolean;
@@ -27,7 +27,7 @@ export function LevelUpOverlay({
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -40,13 +40,13 @@ export function LevelUpOverlay({
         >
           {/* Rotating rays */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <motion.div
+            <m.div
               animate={{ rotate: 360 }}
               transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
               className="relative w-full h-full"
             >
               {RAYS.map((i) => (
-                <motion.div
+                <m.div
                   key={i}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 0.15 }}
@@ -60,12 +60,12 @@ export function LevelUpOverlay({
                   }}
                 />
               ))}
-            </motion.div>
+            </m.div>
           </div>
 
           {/* Content */}
           <div className="relative flex flex-col items-center gap-4 px-8 text-center">
-            <motion.p
+            <m.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -73,9 +73,9 @@ export function LevelUpOverlay({
               style={{ color: memberColor, letterSpacing: "0.3em" }}
             >
               {memberName.toUpperCase()}
-            </motion.p>
+            </m.p>
 
-            <motion.h1
+            <m.h1
               initial={{ opacity: 0, scale: 0.7 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 0.6, type: "spring", bounce: 0.4 }}
@@ -88,9 +88,9 @@ export function LevelUpOverlay({
               }}
             >
               LEVEL UP!
-            </motion.h1>
+            </m.h1>
 
-            <motion.p
+            <m.p
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.35, type: "spring", bounce: 0.5 }}
@@ -98,10 +98,10 @@ export function LevelUpOverlay({
               style={{ color: "#facc15", textShadow: "0 0 20px #facc1566" }}
             >
               Level {level}
-            </motion.p>
+            </m.p>
 
             {/* Avatar */}
-            <motion.div
+            <m.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.45, duration: 0.8, type: "spring", bounce: 0.5 }}
@@ -123,10 +123,10 @@ export function LevelUpOverlay({
                   </span>
                 )}
               </div>
-            </motion.div>
+            </m.div>
 
             {/* Unlock card */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
@@ -135,10 +135,10 @@ export function LevelUpOverlay({
             >
               <p className="text-[10px] text-[var(--arc-muted)] mb-0.5">🎁 Unlocked</p>
               <p className="text-sm font-bold text-white">Nieuw badge: Klusbaas {level}</p>
-            </motion.div>
+            </m.div>
 
             {/* CTA */}
-            <motion.button
+            <m.button
               type="button"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -151,9 +151,9 @@ export function LevelUpOverlay({
               }}
             >
               Doorgaan ✨
-            </motion.button>
+            </m.button>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface ComboMeterProps {
   combo: number; // 0 = hidden, 2+ = show
@@ -19,7 +19,7 @@ export function ComboMeter({ combo }: ComboMeterProps) {
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <m.div
           key="combo"
           initial={{ opacity: 0, y: -20, scale: 0.8 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -32,15 +32,15 @@ export function ComboMeter({ combo }: ComboMeterProps) {
             boxShadow: `0 0 20px ${color}66`,
           }}
         >
-          <motion.span
+          <m.span
             animate={{ scale: [1, 1.15, 1] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
             className="text-sm font-black tabular-nums"
             style={{ color }}
           >
             {text}
-          </motion.span>
-        </motion.div>
+          </m.span>
+        </m.div>
       )}
     </AnimatePresence>
   );

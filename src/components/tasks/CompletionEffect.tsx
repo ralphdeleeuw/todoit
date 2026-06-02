@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -97,7 +97,7 @@ export function CompletionEffect({ effect, show, onDismiss }: CompletionEffectPr
         >
           <div className="absolute left-1/2 top-1/2">
             {particlesRef.current.map((p) => (
-              <motion.span
+              <m.span
                 key={p.id}
                 initial={{ opacity: 1, x: 0, y: 0, scale: p.scale, rotate: 0 }}
                 animate={{ opacity: 0, x: p.x, y: p.y, scale: 0, rotate: p.rotate }}
@@ -111,7 +111,7 @@ export function CompletionEffect({ effect, show, onDismiss }: CompletionEffectPr
                 style={{ color: p.color, fontSize: p.size }}
               >
                 {p.char}
-              </motion.span>
+              </m.span>
             ))}
           </div>
         </div>

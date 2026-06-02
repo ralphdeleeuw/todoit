@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback } from "react";
 import { useDrag } from "@use-gesture/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import * as Checkbox from "@radix-ui/react-checkbox";
 import { Check, Calendar, Pencil, Trash2, UserPlus, RefreshCw, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -164,7 +164,7 @@ export function MissionRow({
       {/* Swipe-left quick options */}
       <AnimatePresence>
         {isQuickOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -189,12 +189,12 @@ export function MissionRow({
               onClick={() => { closeQuickOptions(); onDelete(); }}
               color="#f43f5e"
             />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Main row */}
-      <motion.div
+      <m.div
         {...(bind() as object)}
         style={{ x, touchAction: "pan-y" }}
         animate={{ x }}
@@ -321,7 +321,7 @@ export function MissionRow({
             </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
       <CompletionEffect
         effect={task.list?.effect ?? "none"}
@@ -332,7 +332,7 @@ export function MissionRow({
       {/* XP floater */}
       <AnimatePresence onExitComplete={() => setFloater(null)}>
         {floater && completing && (
-          <motion.div
+          <m.div
             key="floater"
             initial={{ opacity: 1, y: 0, scale: 1 }}
             animate={{ opacity: 0, y: -48, scale: 1.2 }}
@@ -341,7 +341,7 @@ export function MissionRow({
             style={{ color: "#facc15", textShadow: "0 0 8px #facc1588" }}
           >
             {floater}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
