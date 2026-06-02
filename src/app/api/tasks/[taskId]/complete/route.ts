@@ -27,20 +27,20 @@ export async function POST(req: Request, ctx: Ctx) {
       // no body or not JSON
     }
 
-    const result = await completeTaskAndSpawnNext(taskId, user.id, permanent);
-    const taskWithPoints = await prisma.task.findUnique({
-      where: { id: taskId },
-      select: { points: true, list: { select: { points: true } } },
-    });
-    const points = taskWithPoints?.points ?? taskWithPoints?.list?.points ?? 0;
-
     // Award XP to the assignee, not the person who ticked the box
     const recipientId = existing.assigneeId ?? user.id;
+
+    // Completion (incl. recurrence spawn) and the recipient's current XP/streak
+    // are independent once the recipient is known — run them concurrently.
+    const [result, dbUser] = await Promise.all([
+      completeTaskAndSpawnNext(taskId, user.id, permanent),
+      prisma.user.findUnique({ where: { id: recipientId } }),
+    ]);
+    const points = result.points;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const dbUser = await prisma.user.findUnique({ where: { id: recipientId } });
     const prevXp = dbUser?.xp ?? 0;
     const prevStreak = dbUser?.streak ?? 0;
     const lastActivity = dbUser?.lastActivityDate

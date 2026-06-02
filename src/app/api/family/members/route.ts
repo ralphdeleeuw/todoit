@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireFamily, apiError } from "@/lib/auth-helpers";
+import { getFamilyMembers } from "@/lib/queries";
 
 export async function GET() {
   try {
     const user = await requireFamily();
-    const members = await prisma.user.findMany({
-      where: { familyId: user.familyId },
-      select: { id: true, name: true, image: true, role: true, xp: true, weekXp: true, streak: true },
-      orderBy: { name: "asc" },
-    });
+    const members = await getFamilyMembers(user.familyId);
     return NextResponse.json(members);
   } catch (e) {
     return apiError(e);

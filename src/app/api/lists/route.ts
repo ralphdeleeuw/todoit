@@ -1,26 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireFamily, apiError } from "@/lib/auth-helpers";
-
-function canAccessList(
-  list: { ownerId: string | null; visibility: string; members: { userId: string }[] },
-  userId: string
-) {
-  if (list.visibility === "FAMILY") return true;
-  if (list.ownerId === userId) return true;
-  if (list.visibility === "SHARED") return list.members.some((m) => m.userId === userId);
-  return false;
-}
+import { getVisibleLists } from "@/lib/queries";
 
 export async function GET() {
   try {
     const user = await requireFamily();
-    const lists = await prisma.taskList.findMany({
-      where: { familyId: user.familyId },
-      include: { members: { select: { userId: true } } },
-      orderBy: { name: "asc" },
-    });
-    const visible = lists.filter((l) => canAccessList(l, user.id));
+    const visible = await getVisibleLists(user.familyId, user.id);
     return NextResponse.json(visible);
   } catch (e) {
     return apiError(e);

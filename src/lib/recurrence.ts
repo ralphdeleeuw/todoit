@@ -7,12 +7,18 @@ export async function completeTaskAndSpawnNext(
   taskId: string,
   completedByUserId: string,
   permanent = false
-): Promise<{ completedTask: Task; nextTask: Task | null }> {
+): Promise<{ completedTask: Task; nextTask: Task | null; points: number }> {
   const completedTask = await prisma.task.update({
     where: { id: taskId },
     data: { completedAt: new Date() },
-    include: { labels: true, list: { select: { defaultAssigneeId: true } } },
+    include: { labels: true, list: { select: { defaultAssigneeId: true, points: true } } },
   });
+
+  // Points awarded for this task (task-level override, else the list default).
+  const points =
+    completedTask.points ??
+    (completedTask as typeof completedTask & { list: { points: number } | null }).list?.points ??
+    0;
 
   let nextTask: Task | null = null;
 
@@ -25,7 +31,7 @@ export async function completeTaskAndSpawnNext(
     });
 
     if (existingChild) {
-      return { completedTask, nextTask: existingChild };
+      return { completedTask, nextTask: existingChild, points };
     }
 
     const OPEN = "__open__";
@@ -69,5 +75,5 @@ export async function completeTaskAndSpawnNext(
     }
   }
 
-  return { completedTask, nextTask };
+  return { completedTask, nextTask, points };
 }

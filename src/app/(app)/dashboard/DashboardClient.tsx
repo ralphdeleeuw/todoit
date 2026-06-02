@@ -5,6 +5,7 @@ import * as Popover from "@radix-ui/react-popover";
 import useSWR from "swr";
 import { Bell, Settings, Loader2, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 
 import { MissionRow } from "@/components/arcade/MissionRow";
 import { SectionHead } from "@/components/arcade/SectionHead";
@@ -12,14 +13,18 @@ import { LevelCard } from "@/components/arcade/LevelCard";
 import { AvatarFilterStrip } from "@/components/arcade/AvatarFilterStrip";
 import { ArcadeFAB } from "@/components/arcade/ArcadeFAB";
 import { ArcadeNewTaskSheet } from "@/components/arcade/ArcadeNewTaskSheet";
-import { ArcadeTaskDetail } from "@/components/arcade/ArcadeTaskDetail";
 import { LevelUpOverlay } from "@/components/arcade/LevelUpOverlay";
 import { ComboMeter } from "@/components/arcade/ComboMeter";
 
 import { bucketTask, BUCKET_ORDER, BUCKET_META, calcLevel } from "@/lib/arcade";
-import type { TaskWithRelations, ArcadeMember, CompleteResult } from "@/types";
+import type { TaskWithRelations, ArcadeMember, CompleteResult, FamilyRole } from "@/types";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+// Heavy, interaction-only sheet — code-split out of the initial dashboard bundle.
+const ArcadeTaskDetail = dynamic(() =>
+  import("@/components/arcade/ArcadeTaskDetail").then((m) => m.ArcadeTaskDetail)
+);
 
 const MEMBER_COLORS = ["#6366f1", "#ec4899", "#f59e0b", "#10b981"];
 
@@ -133,7 +138,31 @@ function NotificationPopoverContent({
   );
 }
 
-export default function DashboardClient() {
+type DashboardList = {
+  id: string;
+  name: string;
+  color: string | null;
+  points: number;
+  effect: string;
+  members: { userId: string }[];
+};
+
+interface DashboardClientProps {
+  initialTasks: TaskWithRelations[];
+  initialMembers: ArcadeMember[];
+  initialLists: DashboardList[];
+  currentUserId: string;
+  role: FamilyRole;
+}
+
+export default function DashboardClient({
+  initialTasks,
+  initialMembers,
+  initialLists,
+  currentUserId,
+  role,
+}: DashboardClientProps) {
+  const isParent = role === "PARENT";
   const [filterMemberId, setFilterMemberId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
@@ -156,7 +185,9 @@ export default function DashboardClient() {
     data: tasks,
     isLoading: tasksLoading,
     mutate: mutateTasks,
-  } = useSWR<TaskWithRelations[]>("/api/tasks?completed=false", fetcher);
+  } = useSWR<TaskWithRelations[]>("/api/tasks?completed=false", fetcher, {
+    fallbackData: initialTasks,
+  });
 
   const {
     data: completedTasks,
@@ -170,14 +201,12 @@ export default function DashboardClient() {
   const { data: rawMembers = [], mutate: mutateMembers } = useSWR<ArcadeMember[]>(
     "/api/family/members",
     fetcher,
-    { onError: () => {} }
+    { fallbackData: initialMembers, onError: () => {} }
   );
 
-  const { data: lists = [] } = useSWR("/api/lists", fetcher);
-  const { data: sessionData } = useSWR("/api/auth/session", fetcher);
-
-  const currentUserId: string = sessionData?.user?.id ?? "";
-  const isParent: boolean = sessionData?.user?.role === "PARENT";
+  const { data: lists = [] } = useSWR<DashboardList[]>("/api/lists", fetcher, {
+    fallbackData: initialLists,
+  });
 
   const members: ArcadeMember[] = rawMembers.map((m) => ({
     ...m,

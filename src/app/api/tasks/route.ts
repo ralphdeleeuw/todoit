@@ -2,57 +2,30 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireFamily, apiError } from "@/lib/auth-helpers";
 import { canAssignToOthers } from "@/lib/permissions";
-
-const taskInclude = {
-  assignee: { select: { id: true, name: true, image: true } },
-  createdBy: { select: { id: true, name: true } },
-  list: { select: { id: true, name: true, color: true, points: true, effect: true } },
-  labels: { include: { label: { select: { id: true, name: true, color: true } } } },
-  subtasks: { select: { id: true, title: true, completedAt: true } },
-} as const;
+import { buildTaskWhere, taskInclude, taskOrderBy } from "@/lib/queries";
 
 export async function GET(req: Request) {
   try {
     const user = await requireFamily();
     const { searchParams } = new URL(req.url);
 
-    const listId = searchParams.get("listId");
-    const assigneeId = searchParams.get("assigneeId");
-
-    const where: Record<string, unknown> = { familyId: user.familyId, subtaskParentId: null };
-
-    const childFilter = user.role !== "PARENT"
-      ? [{ openForClaim: true }, { assigneeId: user.id }, { createdById: user.id }]
-      : null;
-
-    if (listId) {
-      where.listId = listId;
-      if (childFilter) where.OR = childFilter;
-    } else {
-      if (childFilter) where.OR = childFilter;
-      // PARENT: familyId-filter volstaat
-    }
-
-    if (assigneeId && user.role === "PARENT") where.assigneeId = assigneeId;
-
     const completed = searchParams.get("completed");
-    if (completed === "true") {
-      where.completedAt = { not: null };
-    } else if (completed === "false") {
-      where.completedAt = null;
-    }
-
     const takeParam = searchParams.get("take");
     const take = takeParam ? parseInt(takeParam, 10) : undefined;
 
-    const orderBy = completed === "true"
-      ? [{ completedAt: "desc" as const }]
-      : [{ dueDate: "asc" as const }, { createdAt: "desc" as const }];
+    const where = buildTaskWhere({
+      familyId: user.familyId,
+      userId: user.id,
+      role: user.role,
+      listId: searchParams.get("listId"),
+      assigneeId: searchParams.get("assigneeId"),
+      completed,
+    });
 
     const tasks = await prisma.task.findMany({
       where,
       include: taskInclude,
-      orderBy,
+      orderBy: taskOrderBy(completed),
       ...(take ? { take } : {}),
     });
 

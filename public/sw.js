@@ -14,11 +14,17 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+    (async () => {
+      const keys = await caches.keys()
+      await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      // Navigation Preload lets the browser fetch the page in parallel with SW
+      // startup, cutting latency on every network-first navigation.
+      if (self.registration.navigationPreload) {
+        await self.registration.navigationPreload.enable()
+      }
+      await self.clients.claim()
+    })()
   )
-  self.clients.claim()
 })
 
 self.addEventListener('fetch', event => {
@@ -48,18 +54,23 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  // Network-first for pages — always return a valid Response
+  // Network-first for pages (with navigation preload). Authenticated HTML is
+  // never cached — we race the network and fall back to an offline page only.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(async () => {
-        const cached = await caches.match(request)
-        if (cached) return cached
-        // Return a minimal offline page rather than undefined (which crashes the PWA)
-        return new Response(
-          '<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;flex-direction:column;gap:16px"><p style="font-size:1.1rem">Geen verbinding</p><button onclick="location.reload()" style="padding:10px 24px;background:#4f46e5;color:white;border:none;border-radius:8px;cursor:pointer">Opnieuw proberen</button></body></html>',
-          { status: 503, headers: { 'Content-Type': 'text/html' } }
-        )
-      })
+      (async () => {
+        try {
+          const preloaded = await event.preloadResponse
+          if (preloaded) return preloaded
+          return await fetch(request)
+        } catch {
+          // Return a minimal offline page rather than undefined (which crashes the PWA)
+          return new Response(
+            '<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;flex-direction:column;gap:16px"><p style="font-size:1.1rem">Geen verbinding</p><button onclick="location.reload()" style="padding:10px 24px;background:#4f46e5;color:white;border:none;border-radius:8px;cursor:pointer">Opnieuw proberen</button></body></html>',
+            { status: 503, headers: { 'Content-Type': 'text/html' } }
+          )
+        }
+      })()
     )
   }
 })

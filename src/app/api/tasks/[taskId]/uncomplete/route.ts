@@ -23,18 +23,13 @@ export async function POST(_req: Request, ctx: Ctx) {
 
     const points = existing.list?.points ?? 0;
 
-    await prisma.task.update({
-      where: { id: taskId },
-      data: { completedAt: null },
-    });
-
-    // Remove any unfinished child task that was spawned when this task was completed
-    await prisma.task.deleteMany({
-      where: { parentTaskId: taskId, completedAt: null },
-    });
-
-    // Reverse XP (don't go below 0)
-    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+    // Reverse the completion, drop any spawned child, and read current XP in one
+    // round trip; the floor-at-zero adjustment then needs a single follow-up write.
+    const [, , dbUser] = await prisma.$transaction([
+      prisma.task.update({ where: { id: taskId }, data: { completedAt: null } }),
+      prisma.task.deleteMany({ where: { parentTaskId: taskId, completedAt: null } }),
+      prisma.user.findUnique({ where: { id: user.id }, select: { xp: true, weekXp: true } }),
+    ]);
     const currentXp = dbUser?.xp ?? 0;
     const currentWeekXp = dbUser?.weekXp ?? 0;
 

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { decode } from "next-auth/jwt";
 import { redirect } from "next/navigation";
@@ -11,7 +12,9 @@ type SessionPayload = {
   role?: "PARENT" | "CHILD";
 };
 
-export async function getSessionPayload(): Promise<SessionPayload | null> {
+// Wrapped in React `cache` so a single server render (proxy aside) decodes the
+// JWT at most once even when the layout, page and DAL helpers all ask for it.
+export const getSessionPayload = cache(async (): Promise<SessionPayload | null> => {
   const cookieStore = await cookies();
 
   const secureCookie = cookieStore.get("__Secure-authjs.session-token");
@@ -39,7 +42,7 @@ export async function getSessionPayload(): Promise<SessionPayload | null> {
   } catch {
     return null;
   }
-}
+});
 
 export async function verifySession(): Promise<SessionPayload> {
   const session = await getSessionPayload();
