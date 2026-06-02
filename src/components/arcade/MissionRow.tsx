@@ -100,7 +100,7 @@ export function MissionRow({
             onMoveToTomorrow();
           } else if (mx <= -SWIPE_THRESHOLD || (vx < -0.5 && mx < -20)) {
             // swipe left → open quick options (we leave drawer open)
-            setX(-140);
+            setX(-200);
             return;
           }
           setX(0);

@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import useSWR from "swr";
-import { Bell, Settings, Loader2, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
+import { Bell, Settings, Loader2, ChevronDown, ChevronUp, RotateCcw, Calendar, X } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
@@ -175,6 +175,9 @@ export default function DashboardClient({
 
   // LevelUp state
   const [levelUpData, setLevelUpData] = useState<{ level: number } | null>(null);
+
+  // Date picker
+  const [pickDateTask, setPickDateTask] = useState<TaskWithRelations | null>(null);
 
   // Combo tracking
   const comboTimestamps = useRef<number[]>([]);
@@ -442,6 +445,22 @@ export default function DashboardClient({
     [mutateTasks]
   );
 
+  const handleSetDate = useCallback(
+    async (task: TaskWithRelations, date: Date | null) => {
+      const dueDate = date ? date.toISOString() : null;
+      mutateTasks(
+        (prev) => prev?.map((t) => (t.id === task.id ? { ...t, dueDate: date } : t)) ?? [],
+        false
+      );
+      await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dueDate }),
+      });
+    },
+    [mutateTasks]
+  );
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -556,6 +575,7 @@ export default function DashboardClient({
                     onMoveToTomorrow={() => handleMoveToTomorrow(task)}
                     onOpenDetail={() => setSelectedTask(task)}
                     onDelete={() => handleDelete(task)}
+                    onPickDate={() => setPickDateTask(task)}
                     onClaimed={handleUpdated}
                   />
                 ))}
@@ -638,6 +658,18 @@ export default function DashboardClient({
         )}
       </div>
 
+      {/* Date picker sheet */}
+      {pickDateTask && (
+        <DatePickerSheet
+          task={pickDateTask}
+          onClose={() => setPickDateTask(null)}
+          onPick={(date) => {
+            handleSetDate(pickDateTask, date);
+            setPickDateTask(null);
+          }}
+        />
+      )}
+
       {/* Arcade task detail sheet */}
       {selectedTask && (
         <ArcadeTaskDetail
@@ -697,6 +729,96 @@ export default function DashboardClient({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function DatePickerSheet({
+  task,
+  onClose,
+  onPick,
+}: {
+  task: TaskWithRelations;
+  onClose: () => void;
+  onPick: (date: Date | null) => void;
+}) {
+  function dateOption(offsetDays: number): Date {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    d.setHours(12, 0, 0, 0);
+    return d;
+  }
+
+  const options = [
+    { label: "Vandaag", date: dateOption(0) },
+    { label: "Morgen", date: dateOption(1) },
+    { label: "Overmorgen", date: dateOption(2) },
+    { label: "Volgende week", date: dateOption(7) },
+  ];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end"
+      onClick={onClose}
+    >
+      <div
+        className="w-full rounded-t-3xl p-6 pb-10"
+        style={{ background: "var(--arc-panel-2)", border: "1px solid var(--arc-border-str)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" style={{ color: "#6366f1" }} />
+            <span className="text-white font-bold text-sm">Datum instellen</span>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10">
+            <X className="w-4 h-4" style={{ color: "var(--arc-muted)" }} />
+          </button>
+        </div>
+
+        <p className="text-[var(--arc-muted)] text-xs mb-4 truncate">{task.title}</p>
+
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {options.map(({ label, date }) => (
+            <button
+              key={label}
+              onClick={() => onPick(date)}
+              className="py-3 px-4 rounded-2xl text-sm font-semibold transition-all active:scale-95 text-left"
+              style={{ background: "rgba(99,102,241,0.12)", color: "#a5b4fc" }}
+            >
+              <span className="block text-white font-bold">{label}</span>
+              <span className="text-[10px]" style={{ color: "var(--arc-muted)" }}>
+                {date.toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" })}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <input
+            type="date"
+            className="flex-1 rounded-xl px-3 py-2.5 text-sm font-medium outline-none"
+            style={{ background: "var(--arc-panel)", color: "white", border: "1px solid var(--arc-border-str)" }}
+            defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : ""}
+            onChange={(e) => {
+              if (e.target.value) {
+                const [y, m, d] = e.target.value.split("-").map(Number);
+                const date = new Date(y, m - 1, d, 12, 0, 0, 0);
+                onPick(date);
+              }
+            }}
+          />
+          {task.dueDate && (
+            <button
+              onClick={() => onPick(null)}
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95"
+              style={{ background: "rgba(244,63,94,0.12)", color: "#fb7185" }}
+            >
+              Wis datum
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
