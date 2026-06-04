@@ -2,18 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, List, Trophy, Users } from "lucide-react";
+import { Home, List, Trophy, Users, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Taken", icon: Home },
-  { href: "/lists",     label: "Lijsten",  icon: List },
-  { href: "/score",     label: "Top 4",    icon: Trophy },
-  { href: "/family",    label: "Squad",    icon: Users },
+const BASE_NAV_ITEMS = [
+  { href: "/dashboard", label: "Taken",   icon: Home },
+  { href: "/lists",     label: "Lijsten", icon: List },
+  { href: "/score",     label: "Top 4",   icon: Trophy },
+  { href: "/family",    label: "Squad",   icon: Users },
 ];
 
-export function ArcadeBottomNav() {
+const TRACKER_NAV_ITEM = { href: "/tracker", label: "Nachten", icon: Moon };
+
+interface ArcadeBottomNavProps {
+  showTracker?: boolean;
+}
+
+export function ArcadeBottomNav({ showTracker = false }: ArcadeBottomNavProps) {
   const pathname = usePathname();
+  const NAV_ITEMS = showTracker
+    ? [...BASE_NAV_ITEMS, TRACKER_NAV_ITEM]
+    : BASE_NAV_ITEMS;
 
   return (
     <nav

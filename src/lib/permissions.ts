@@ -21,3 +21,12 @@ export function canManageFamily(viewer: Viewer): boolean {
 export function canAssignToOthers(viewer: Viewer): boolean {
   return viewer.role === "PARENT";
 }
+
+export function canAccessTracker(
+  viewer: Viewer,
+  ownerId: string,
+  ownerFamilyId: string,
+): boolean {
+  if (!viewer.familyId || viewer.familyId !== ownerFamilyId) return false;
+  return viewer.role === "PARENT" || viewer.id === ownerId;
+}

@@ -1,3 +1,5 @@
+import type { NightStatus } from "@prisma/client";
+
 export type CategoryId = "huishouden" | "klusjes" | "school" | "kamperen" | "persoonlijk";
 export type TaskBucket = "overdue" | "today" | "tomorrow" | "week" | "later";
 
@@ -73,6 +75,25 @@ export const COMPLETE_COMPLIMENTS = [
 export function randomCompliment(): string {
   return COMPLETE_COMPLIMENTS[Math.floor(Math.random() * COMPLETE_COMPLIMENTS.length)];
 }
+
+// ── Night Tracker ─────────────────────────────────────────────────────────────
+
+export const NIGHT_POINTS: Record<NightStatus, number> = {
+  DRY: 25,
+  DRY_MEDS: 0,
+  WET: 0,
+  WET_MEDS: 0,
+};
+
+export const NIGHT_MILESTONES = [
+  { id: "first",  label: "Eerste droge nacht", emoji: "🌙", type: "total",  threshold: 1  },
+  { id: "five",   label: "5 droge nachten",    emoji: "⭐", type: "total",  threshold: 5  },
+  { id: "ten",    label: "10 droge nachten",   emoji: "🌟", type: "total",  threshold: 10 },
+  { id: "week",   label: "Droge week!",        emoji: "🏅", type: "streak", threshold: 7  },
+  { id: "thirty", label: "30 droge nachten",   emoji: "👑", type: "total",  threshold: 30 },
+] as const;
+
+export type NightMilestone = typeof NIGHT_MILESTONES[number];
 
 // Determine left-border color from list color or fall back to default
 export function listColor(color: string | null | undefined): string {

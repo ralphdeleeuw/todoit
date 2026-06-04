@@ -25,6 +25,7 @@ export type SessionUser = {
   image?: string | null;
   familyId?: string | null;
   role?: FamilyRole;
+  trackerEnabled?: boolean;
 };
 
 // ── Arcade types ──────────────────────────────────────────────────────────────

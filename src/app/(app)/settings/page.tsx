@@ -1,8 +1,10 @@
-import { getFullUser } from "@/lib/dal";
+import { getFullUser, verifyFamily } from "@/lib/dal";
+import { prisma } from "@/lib/prisma";
 import { calcLevel } from "@/lib/arcade";
 import { PushSubscribeButton } from "@/components/notifications/PushSubscribeButton";
 import { DailyReminderToggle } from "./DailyReminderToggle";
 import { SignOutButton } from "./SignOutButton";
+import { TrackerSettings } from "./TrackerSettings";
 import { ArcadeBottomNav } from "@/components/arcade/ArcadeBottomNav";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import Link from "next/link";
@@ -39,8 +41,16 @@ function SettingRow({ icon, label, sub, right }: { icon: string; label: string; 
 }
 
 export default async function SettingsPage() {
-  const user = await getFullUser();
+  const [user, session] = await Promise.all([getFullUser(), verifyFamily()]);
   const level = calcLevel(user.xp ?? 0);
+
+  const familyMembers =
+    user.role === "PARENT"
+      ? await prisma.user.findMany({
+          where: { familyId: session.familyId },
+          select: { id: true, name: true, email: true, role: true, trackerEnabled: true },
+        })
+      : [];
   const initial = (user.name ?? user.email ?? "?")[0].toUpperCase();
 
   return (
@@ -92,6 +102,7 @@ export default async function SettingsPage() {
           <Link href="/family">
             <SettingRow icon="👥" label="Gezinsleden" sub="Rollen en uitnodigingen beheren" />
           </Link>
+          <TrackerSettings members={familyMembers} />
         </ArcadeSection>
       )}
 

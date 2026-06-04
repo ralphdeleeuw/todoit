@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, List, Users, Settings, CheckSquare } from "lucide-react";
+import { Home, List, Users, Settings, CheckSquare, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ArcadeBottomNav } from "@/components/arcade/ArcadeBottomNav";
 import { NavigationProgress } from "@/components/arcade/NavigationProgress";
@@ -14,17 +14,19 @@ interface AppShellProps {
   lists: { id: string; name: string; color: string | null }[];
 }
 
-const navItems = (isParent: boolean) => [
+const navItems = (isParent: boolean, showTracker: boolean) => [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/lists", label: "Lijsten", icon: List },
   ...(isParent ? [{ href: "/family", label: "Gezin", icon: Users }] : []),
+  ...(showTracker ? [{ href: "/tracker", label: "Mijn Nachten", icon: Moon }] : []),
   { href: "/settings", label: "Instellingen", icon: Settings },
 ];
 
 export function AppShell({ children, user, lists }: AppShellProps) {
   const pathname = usePathname();
   const isParent = user.role === "PARENT";
-  const items = navItems(isParent);
+  const showTracker = isParent || (user.trackerEnabled ?? false);
+  const items = navItems(isParent, showTracker);
 
   return (
     <div className="flex h-full min-h-screen bg-[var(--background)]">
@@ -125,7 +127,7 @@ export function AppShell({ children, user, lists }: AppShellProps) {
 
       {/* Arcade bottom nav (mobile only) */}
       <div className="md:hidden">
-        <ArcadeBottomNav />
+        <ArcadeBottomNav showTracker={showTracker} />
       </div>
     </div>
   );

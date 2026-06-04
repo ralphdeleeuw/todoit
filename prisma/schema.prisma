@@ -35,6 +35,7 @@ model User {
   emailVerified DateTime?
   image         String?
   dailyReminderEnabled Boolean @default(true)
+  trackerEnabled Boolean  @default(false)
   xp            Int        @default(0)
   weekXp        Int        @default(0)
   streak        Int        @default(0)
@@ -53,6 +54,8 @@ model User {
   pushSubs       PushSubscription[]
   ownedLists     TaskList[]        @relation("OwnedLists")
   sharedLists    TaskListMember[]  @relation("SharedListMember")
+  nightLogs      NightLog[]        @relation("NightLogs")
+  rewardGoals    RewardGoal[]      @relation("RewardGoals")
 
   @@index([familyId])
 }
@@ -160,6 +163,45 @@ model Label {
   createdAt DateTime   @default(now())
 
   @@index([familyId])
+}
+
+// ─── Night Tracker ─────────────────────────────────────────────────────────
+
+enum NightStatus {
+  DRY
+  DRY_MEDS
+  WET
+  WET_MEDS
+}
+
+model NightLog {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation("NightLogs", fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime    @db.Date
+  status    NightStatus
+  points    Int         @default(0)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model RewardGoal {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation("RewardGoals", fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  emoji          String?
+  targetPoints   Int
+  baselinePoints Int       @default(0)
+  achievedAt     DateTime?
+  active         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([userId])
 }
 
 // ─── Tasks ─────────────────────────────────────────────────────────────────
