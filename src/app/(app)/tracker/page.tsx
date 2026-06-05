@@ -66,10 +66,10 @@ export default async function TrackerPage({
     );
   }
 
-  // Resolve target user's familyId + trackerEnabled + name
+  // Resolve target user's familyId + trackerEnabled + name + start date
   const targetUser = await prisma.user.findUnique({
     where: { id: targetId },
-    select: { familyId: true, trackerEnabled: true, name: true },
+    select: { familyId: true, trackerEnabled: true, name: true, trackerStartDate: true },
   });
 
   if (
@@ -109,7 +109,7 @@ export default async function TrackerPage({
     }),
   ]);
 
-  const stats = computeNightStats(allLogs);
+  const stats = computeNightStats(allLogs, targetUser.trackerStartDate);
 
   const totalPoints = stats.totalPoints;
   const goalProgress = activeGoal

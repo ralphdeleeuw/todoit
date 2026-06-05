@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     // Resolve the target user's familyId for the permission check
     const targetUser = await prisma.user.findUnique({
       where: { id: targetId },
-      select: { familyId: true },
+      select: { familyId: true, trackerStartDate: true },
     });
     if (
       !targetUser?.familyId ||
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
       orderBy: { date: "asc" },
     });
 
-    const stats = computeNightStats(allLogs);
+    const stats = computeNightStats(allLogs, targetUser.trackerStartDate);
 
     let monthLogs = allLogs;
     if (month) {
@@ -91,7 +91,7 @@ export async function PUT(req: Request) {
 
     const targetUser = await prisma.user.findUnique({
       where: { id: targetId },
-      select: { familyId: true },
+      select: { familyId: true, trackerStartDate: true },
     });
     if (
       !targetUser?.familyId ||
@@ -102,6 +102,13 @@ export async function PUT(req: Request) {
 
     // Normalize date to midnight UTC to match @db.Date storage
     const logDate = new Date(date + "T00:00:00.000Z");
+
+    // Nights before the fresh-start date stay on the calendar but earn no XP.
+    const startDate = targetUser.trackerStartDate;
+    const countsForScore =
+      !startDate ||
+      logDate.toISOString().slice(0, 10) >=
+        new Date(startDate).toISOString().slice(0, 10);
 
     // Read existing entry to compute XP delta
     const existing = await prisma.nightLog.findUnique({
@@ -126,9 +133,9 @@ export async function PUT(req: Request) {
       },
     });
 
-    // Apply XP delta if it changed
+    // Apply XP delta if it changed (only for nights on/after the fresh-start date)
     let xpResult = null;
-    if (delta !== 0) {
+    if (delta !== 0 && countsForScore) {
       xpResult = await awardXp(targetId, delta, { touchStreak: delta > 0 });
     }
 
@@ -137,7 +144,7 @@ export async function PUT(req: Request) {
       where: { userId: targetId },
       orderBy: { date: "asc" },
     });
-    const stats = computeNightStats(allLogs);
+    const stats = computeNightStats(allLogs, startDate);
 
     const activeGoal = await prisma.rewardGoal.findFirst({
       where: { userId: targetId, active: true },

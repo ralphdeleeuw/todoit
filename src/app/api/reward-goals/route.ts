@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireFamily, apiError } from "@/lib/auth-helpers";
 import { canAccessTracker } from "@/lib/permissions";
+import { logsFromStart } from "@/lib/nightlog";
 
 export async function GET(req: Request) {
   try {
@@ -12,7 +13,7 @@ export async function GET(req: Request) {
 
     const targetUser = await prisma.user.findUnique({
       where: { id: targetId },
-      select: { familyId: true },
+      select: { familyId: true, trackerStartDate: true },
     });
     if (
       !targetUser?.familyId ||
@@ -28,11 +29,12 @@ export async function GET(req: Request) {
       }),
       prisma.nightLog.findMany({
         where: { userId: targetId },
-        select: { points: true },
+        select: { points: true, status: true, date: true },
       }),
     ]);
 
-    const totalPoints = logs.reduce((s, l) => s + l.points, 0);
+    const totalPoints = logsFromStart(logs, targetUser.trackerStartDate)
+      .reduce((s, l) => s + l.points, 0);
     const enriched = goals.map((g) => ({
       ...g,
       progress: Math.max(0, totalPoints - g.baselinePoints),
@@ -63,7 +65,7 @@ export async function POST(req: Request) {
 
     const targetUser = await prisma.user.findUnique({
       where: { id: targetId },
-      select: { familyId: true },
+      select: { familyId: true, trackerStartDate: true },
     });
     if (
       !targetUser?.familyId ||
@@ -75,9 +77,10 @@ export async function POST(req: Request) {
     // Baseline = current total points so progress starts at 0
     const logs = await prisma.nightLog.findMany({
       where: { userId: targetId },
-      select: { points: true },
+      select: { points: true, status: true, date: true },
     });
-    const baselinePoints = logs.reduce((s, l) => s + l.points, 0);
+    const baselinePoints = logsFromStart(logs, targetUser.trackerStartDate)
+      .reduce((s, l) => s + l.points, 0);
 
     // Deactivate existing active goals
     await prisma.rewardGoal.updateMany({

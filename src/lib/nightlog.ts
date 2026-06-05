@@ -3,6 +3,25 @@ import { NIGHT_MILESTONES } from "@/lib/arcade";
 
 export type NightLogEntry = Pick<NightLog, "date" | "status" | "points">;
 
+/** Normalizes any date-ish value to a "YYYY-MM-DD" key for lexicographic compare. */
+function dayKey(d: Date | string): string {
+  return new Date(d).toISOString().slice(0, 10);
+}
+
+/**
+ * Returns only the logs on/after the tracker start date. Nights logged before a
+ * "fresh start" stay visible on the calendar but no longer count toward points,
+ * badges or streaks. When no start date is set, all logs count.
+ */
+export function logsFromStart(
+  logs: NightLogEntry[],
+  startDate: Date | string | null | undefined,
+): NightLogEntry[] {
+  if (!startDate) return logs;
+  const startKey = dayKey(startDate);
+  return logs.filter((l) => dayKey(l.date) >= startKey);
+}
+
 /** A "dry night" for streak/total purposes: physically stayed dry (with or without meds). */
 function isDry(status: NightStatus): boolean {
   return status === "DRY" || status === "DRY_MEDS";
@@ -110,11 +129,15 @@ export type NightStats = {
   milestonesReached: string[];
 };
 
-export function computeNightStats(logs: NightLogEntry[]): NightStats {
-  const currentStreak = computeDryStreak(logs);
-  const longestStreak = computeLongestDryStreak(logs);
-  const totalDryNights = computeTotalDryNights(logs);
-  const totalPoints = computeTotalNightPoints(logs);
+export function computeNightStats(
+  logs: NightLogEntry[],
+  startDate?: Date | string | null,
+): NightStats {
+  const counted = logsFromStart(logs, startDate);
+  const currentStreak = computeDryStreak(counted);
+  const longestStreak = computeLongestDryStreak(counted);
+  const totalDryNights = computeTotalDryNights(counted);
+  const totalPoints = computeTotalNightPoints(counted);
   const milestonesReached = computeMilestonesReached(totalDryNights, longestStreak);
   return { currentStreak, longestStreak, totalDryNights, totalPoints, milestonesReached };
 }

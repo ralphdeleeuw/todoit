@@ -36,6 +36,7 @@ model User {
   image         String?
   dailyReminderEnabled Boolean @default(true)
   trackerEnabled Boolean  @default(false)
+  trackerStartDate DateTime? @db.Date
   xp            Int        @default(0)
   weekXp        Int        @default(0)
   streak        Int        @default(0)
