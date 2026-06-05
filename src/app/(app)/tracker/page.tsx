@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifyFamily } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { canAccessTracker } from "@/lib/permissions";
 import { computeNightStats } from "@/lib/nightlog";
 import { TrackerClient } from "./TrackerClient";
-import type { NightStatus } from "@prisma/client";
+import type { FamilyRole, NightStatus } from "@prisma/client";
 
 export const metadata = { title: "Mijn Nachten – Todoit" };
 export const dynamic = "force-dynamic";
@@ -17,19 +18,59 @@ export default async function TrackerPage({
   const session = await verifyFamily();
   const { child } = await searchParams;
 
-  const targetId = child ?? session.id;
-
-  // Resolve target user's familyId + trackerEnabled
-  const targetUser = await prisma.user.findUnique({
-    where: { id: targetId },
-    select: { familyId: true, trackerEnabled: true },
-  });
-
   const viewer = {
     id: session.id,
     familyId: session.familyId,
-    role: (session.role ?? "CHILD") as import("@prisma/client").FamilyRole,
+    role: (session.role ?? "CHILD") as FamilyRole,
   };
+  const isParent = viewer.role === "PARENT";
+
+  // Parents can browse the tracker of any tracked child in the family.
+  const trackedChildren = isParent
+    ? await prisma.user.findMany({
+        where: { familyId: session.familyId, trackerEnabled: true },
+        select: { id: true, name: true, image: true },
+        orderBy: { name: "asc" },
+      })
+    : [];
+
+  // Resolve which user's tracker to show.
+  // - explicit ?child= wins
+  // - parents default to the first tracked child (their own tracker is usually empty)
+  // - children always see their own
+  let targetId = session.id;
+  if (child) {
+    targetId = child;
+  } else if (isParent && trackedChildren.length > 0) {
+    targetId = trackedChildren[0].id;
+  }
+
+  // Parent opened the tracker but no child has it enabled yet — friendly hint.
+  if (isParent && trackedChildren.length === 0 && !child) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-10 text-center space-y-3">
+        <p className="text-4xl">🌙</p>
+        <h1 className="text-xl font-bold">Nacht-tracker</h1>
+        <p className="text-sm text-[var(--arc-muted,#8e8eb6)]">
+          Er is nog geen kind met de nacht-tracker aan. Zet de tracker aan bij
+          een kind via Instellingen.
+        </p>
+        <Link
+          href="/settings"
+          className="inline-block mt-2 px-4 py-2 rounded-xl text-sm font-bold"
+          style={{ background: "var(--gold,#facc15)", color: "#1a1a1a" }}
+        >
+          Naar Instellingen
+        </Link>
+      </div>
+    );
+  }
+
+  // Resolve target user's familyId + trackerEnabled + name
+  const targetUser = await prisma.user.findUnique({
+    where: { id: targetId },
+    select: { familyId: true, trackerEnabled: true, name: true },
+  });
 
   if (
     !targetUser?.familyId ||
@@ -38,8 +79,8 @@ export default async function TrackerPage({
     return notFound();
   }
 
-  // Parents can always access; children need trackerEnabled or it's their own profile
-  if (viewer.role !== "PARENT" && !targetUser.trackerEnabled) {
+  // Children need trackerEnabled on their own profile; parents always pass.
+  if (!isParent && !targetUser.trackerEnabled) {
     return notFound();
   }
 
@@ -76,8 +117,6 @@ export default async function TrackerPage({
     : null;
 
   // Today's log (if any)
-  const todayStart = new Date(year, month - 1, now.getDate());
-  todayStart.setHours(0, 0, 0, 0);
   const todayLog = allLogs.find((l) => {
     const d = new Date(l.date);
     return d.getUTCFullYear() === year &&
@@ -95,6 +134,10 @@ export default async function TrackerPage({
     }),
   );
 
+  // When a parent views a child, the UI reads "Nachten van <naam>".
+  const viewingOwn = targetId === session.id;
+  const viewingName = viewingOwn ? null : targetUser.name ?? "Kind";
+
   return (
     <TrackerClient
       childId={targetId}
@@ -102,6 +145,9 @@ export default async function TrackerPage({
       initialYear={year}
       initialMonth={month}
       todayStatus={(todayLog?.status ?? null) as NightStatus | null}
+      isParentView={isParent && !viewingOwn}
+      viewingName={viewingName}
+      trackedChildren={trackedChildren.map((c) => ({ id: c.id, name: c.name }))}
     />
   );
 }

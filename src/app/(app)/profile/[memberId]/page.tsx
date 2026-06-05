@@ -5,7 +5,7 @@ import { calcLevel, xpIntoCurrentLevel } from "@/lib/arcade";
 import { ArcadeBottomNav } from "@/components/arcade/ArcadeBottomNav";
 import { CompletedTasksChart } from "@/components/profile/CompletedTasksChart";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronRight } from "lucide-react";
 import { subDays, startOfDay, format } from "date-fns";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export default async function ProfilePage({ params }: Params) {
       where: { id: memberId, familyId: session.familyId },
       select: {
         id: true, name: true, email: true, image: true, role: true,
-        xp: true, weekXp: true, streak: true,
+        xp: true, weekXp: true, streak: true, trackerEnabled: true,
         assignedTasks: {
           where: { completedAt: { not: null } },
           orderBy: { completedAt: "desc" },
@@ -132,6 +132,27 @@ export default async function ProfilePage({ params }: Params) {
         </div>
         <p className="text-[10px] text-[var(--arc-muted)] tabular-nums">{xpIn} / 500 XP naar level {level + 1}</p>
       </div>
+
+      {/* Night tracker link — parents only, for tracked children */}
+      {session.role === "PARENT" && member.trackerEnabled && (
+        <div className="px-4 mb-4">
+          <Link
+            href={`/tracker?child=${member.id}`}
+            className="flex items-center gap-3 p-4 rounded-2xl transition-all active:scale-[.98]"
+            style={{
+              background: "linear-gradient(135deg, rgba(250,204,21,0.12), var(--arc-panel))",
+              border: "1px solid rgba(250,204,21,0.3)",
+            }}
+          >
+            <span className="text-2xl">🌙</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white">Nacht-tracker</p>
+              <p className="text-[10px] text-[var(--arc-muted)]">Bekijk droge en natte nachten</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[var(--arc-muted)] shrink-0" />
+          </Link>
+        </div>
+      )}
 
       {/* Stats grid */}
       <div className="px-4 grid grid-cols-2 gap-3 mb-4">

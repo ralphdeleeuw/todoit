@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import type { NightStatus } from "@prisma/client";
 import { NightPicker } from "@/components/tracker/NightPicker";
@@ -10,9 +11,6 @@ import { MilestoneBadges } from "@/components/tracker/MilestoneBadges";
 import { RewardGoalCard } from "@/components/tracker/RewardGoalCard";
 import { CompletionEffect } from "@/components/tasks/CompletionEffect";
 import type { NightStats } from "@/lib/nightlog";
-import type { NIGHT_MILESTONES } from "@/lib/arcade";
-
-type Milestone = typeof NIGHT_MILESTONES[number];
 
 interface NightLogEntry {
   date: string;
@@ -35,12 +33,23 @@ interface TrackerData {
   activeGoal: (RewardGoal & { progress: number }) | null;
 }
 
+interface TrackedChild {
+  id: string;
+  name: string | null;
+}
+
 interface TrackerClientProps {
   childId: string;
   initialData: TrackerData;
   initialYear: number;
   initialMonth: number;
   todayStatus: NightStatus | null;
+  /** True when a parent is viewing one of their children's tracker. */
+  isParentView?: boolean;
+  /** Name of the child being viewed (null when viewing your own). */
+  viewingName?: string | null;
+  /** Tracker-enabled children a parent can switch between. */
+  trackedChildren?: TrackedChild[];
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -51,7 +60,11 @@ export function TrackerClient({
   initialYear,
   initialMonth,
   todayStatus,
+  isParentView = false,
+  viewingName = null,
+  trackedChildren = [],
 }: TrackerClientProps) {
+  const router = useRouter();
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
   const [selectedStatus, setSelectedStatus] = useState<NightStatus | null>(todayStatus);
@@ -120,15 +133,48 @@ export function TrackerClient({
     setMonth(m);
   }
 
+  const showSelector = isParentView && trackedChildren.length > 1;
+
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
       {/* Title */}
       <div>
-        <h1 className="text-2xl font-bold">🌙 Mijn Nachten</h1>
+        <h1 className="text-2xl font-bold">
+          🌙 {viewingName ? `Nachten van ${viewingName}` : "Mijn Nachten"}
+        </h1>
         <p className="text-sm text-[var(--arc-muted,#8e8eb6)] mt-0.5">
-          Hoe ging het afgelopen nacht?
+          {isParentView ? "Overzicht van de nachten" : "Hoe ging het afgelopen nacht?"}
         </p>
       </div>
+
+      {/* Child selector (parents with multiple tracked children) */}
+      {showSelector && (
+        <div className="flex flex-wrap gap-2">
+          {trackedChildren.map((c) => {
+            const active = c.id === childId;
+            return (
+              <button
+                key={c.id}
+                onClick={() => router.push(`/tracker?child=${c.id}`)}
+                className="px-3 py-1.5 rounded-full text-sm font-semibold transition-all"
+                style={
+                  active
+                    ? {
+                        background: "linear-gradient(135deg, var(--xp-accent,#06d6c4), var(--accent-primary,#7c3aed))",
+                        color: "#fff",
+                      }
+                    : {
+                        background: "rgba(255,255,255,0.06)",
+                        color: "var(--arc-muted,#8e8eb6)",
+                      }
+                }
+              >
+                {c.name ?? "Kind"}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Streak banner */}
       <DryStreakBanner
