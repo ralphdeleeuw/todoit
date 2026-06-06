@@ -139,14 +139,12 @@ export default async function TrackerPage({
   const viewingName = viewingOwn ? null : targetUser.name ?? "Kind";
   const parentView = isParent && !viewingOwn;
 
-  // Day notes are a parent-only tool — only fetch them for the parent view.
-  const dayNotes = parentView
-    ? await prisma.dayNote.findMany({
-        where: { userId: targetId },
-        select: { date: true, note: true },
-        orderBy: { date: "asc" },
-      })
-    : [];
+  // Notes are visible to the child and parents; only parents can edit them.
+  const dayNotes = await prisma.dayNote.findMany({
+    where: { userId: targetId },
+    select: { date: true, note: true },
+    orderBy: { date: "asc" },
+  });
   const initialNotes = JSON.parse(JSON.stringify(dayNotes));
 
   return (

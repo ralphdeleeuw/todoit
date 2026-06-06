@@ -3,12 +3,19 @@ import { prisma } from "@/lib/prisma";
 import { requireFamily, apiError } from "@/lib/auth-helpers";
 import { canAccessTracker } from "@/lib/permissions";
 
-/** Resolve the target child and verify the caller is a parent in the same family. */
-async function resolveParentAccess(
+/**
+ * Resolve the target child and verify access.
+ * - `requireEdit: true` → caller must be a PARENT (notes are a parent-only tool to create/edit).
+ * - otherwise read access follows canAccessTracker (the child + their parents).
+ */
+async function resolveAccess(
   user: { id: string; familyId: string; role: string },
   childId: string | null,
+  requireEdit: boolean,
 ) {
-  if (user.role !== "PARENT") return { error: "Alleen ouders kunnen notities beheren", status: 403 };
+  if (requireEdit && user.role !== "PARENT") {
+    return { error: "Alleen ouders kunnen notities beheren", status: 403 };
+  }
   const targetId = childId ?? user.id;
   const targetUser = await prisma.user.findUnique({
     where: { id: targetId },
@@ -24,12 +31,12 @@ async function resolveParentAccess(
   return { targetId };
 }
 
-/** GET /api/daynotes?child=<id>&month=YYYY-MM */
+/** GET /api/daynotes?child=<id> — readable by the child and their parents. */
 export async function GET(req: Request) {
   try {
     const user = await requireFamily();
     const { searchParams } = new URL(req.url);
-    const access = await resolveParentAccess(user, searchParams.get("child"));
+    const access = await resolveAccess(user, searchParams.get("child"), false);
     if ("error" in access) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }
@@ -55,7 +62,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "date is verplicht" }, { status: 400 });
     }
 
-    const access = await resolveParentAccess(user, child ?? null);
+    const access = await resolveAccess(user, child ?? null, true);
     if ("error" in access) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }

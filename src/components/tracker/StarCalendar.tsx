@@ -15,8 +15,10 @@ interface StarCalendarProps {
   onMonthChange: (year: number, month: number) => void;
   /** Set of "YYYY-MM-DD" dates that have a note (shown with a 📝 dot). */
   noteDates?: Set<string>;
-  /** When provided, day cells become tappable (e.g. for parents to add a note). */
+  /** When provided, day cells become tappable (e.g. to view or add a note). */
   onDayClick?: (dateStr: string) => void;
+  /** When false, only days that already have a note are tappable (view-only). */
+  allowEmptyClick?: boolean;
 }
 
 const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
@@ -33,7 +35,7 @@ function statusColor(status: NightStatus): string {
   return "#818cf8";
 }
 
-export function StarCalendar({ year, month, logs, onMonthChange, noteDates, onDayClick }: StarCalendarProps) {
+export function StarCalendar({ year, month, logs, onMonthChange, noteDates, onDayClick, allowEmptyClick = true }: StarCalendarProps) {
   const logMap = new Map(logs.map((l) => {
     const d = new Date(l.date);
     return [`${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`, l.status];
@@ -122,7 +124,7 @@ export function StarCalendar({ year, month, logs, onMonthChange, noteDates, onDa
           const isFuture = cellDate > today;
           const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const hasNote = noteDates?.has(dateStr) ?? false;
-          const clickable = !!onDayClick && !isFuture;
+          const clickable = !!onDayClick && !isFuture && (allowEmptyClick || hasNote);
 
           return (
             <div key={key} className="relative">

@@ -214,14 +214,15 @@ export function TrackerClient({
           month={month}
           logs={monthLogs}
           onMonthChange={handleMonthChange}
-          noteDates={isParentView ? new Set(Object.keys(notes)) : undefined}
-          onDayClick={isParentView ? (d) => setEditingDate(d) : undefined}
+          noteDates={new Set(Object.keys(notes))}
+          onDayClick={(d) => setEditingDate(d)}
+          allowEmptyClick={isParentView}
         />
-        {isParentView && (
-          <p className="text-[11px] text-[var(--arc-muted,#8e8eb6)] text-center mt-3">
-            Tik op een dag om een notitie toe te voegen 📝
-          </p>
-        )}
+        <p className="text-[11px] text-[var(--arc-muted,#8e8eb6)] text-center mt-3">
+          {isParentView
+            ? "Tik op een dag om een notitie toe te voegen 📝"
+            : "Tik op een dag met 📝 om de notitie te lezen"}
+        </p>
       </div>
 
       {/* Milestone badges */}
@@ -248,24 +249,23 @@ export function TrackerClient({
         }}
       />
 
-      {/* Day note editor (parents only) */}
-      {isParentView && (
-        <DayNoteEditor
-          key={editingDate ?? "closed"}
-          dateStr={editingDate}
-          initialNote={editingDate ? notes[editingDate] ?? "" : ""}
-          childId={childId}
-          onClose={() => setEditingDate(null)}
-          onSaved={(dateStr, note) =>
-            setNotes((prev) => {
-              const next = { ...prev };
-              if (note) next[dateStr] = note;
-              else delete next[dateStr];
-              return next;
-            })
-          }
-        />
-      )}
+      {/* Day note viewer/editor — read-only for the child, editable for parents */}
+      <DayNoteEditor
+        key={editingDate ?? "closed"}
+        dateStr={editingDate}
+        initialNote={editingDate ? notes[editingDate] ?? "" : ""}
+        childId={childId}
+        readOnly={!isParentView}
+        onClose={() => setEditingDate(null)}
+        onSaved={(dateStr, note) =>
+          setNotes((prev) => {
+            const next = { ...prev };
+            if (note) next[dateStr] = note;
+            else delete next[dateStr];
+            return next;
+          })
+        }
+      />
     </div>
   );
 }

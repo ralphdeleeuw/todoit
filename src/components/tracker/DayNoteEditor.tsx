@@ -7,6 +7,8 @@ interface DayNoteEditorProps {
   dateStr: string | null;
   initialNote: string;
   childId: string;
+  /** When true the note is shown as read-only text (e.g. for the child). */
+  readOnly?: boolean;
   onClose: () => void;
   onSaved: (dateStr: string, note: string | null) => void;
 }
@@ -25,6 +27,7 @@ export function DayNoteEditor({
   dateStr,
   initialNote,
   childId,
+  readOnly = false,
   onClose,
   onSaved,
 }: DayNoteEditorProps) {
@@ -79,36 +82,47 @@ export function DayNoteEditor({
           </button>
         </div>
 
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={4}
-          autoFocus
-          placeholder="Bijv. verjaardagsfeestje, laat naar bed, veel gedronken, ziek…"
-          className="w-full rounded-xl px-3 py-2.5 text-sm resize-none bg-transparent border outline-none focus:border-[var(--xp-accent,#06d6c4)]"
-          style={{ borderColor: "var(--border,rgba(255,255,255,0.12))", color: "var(--foreground)" }}
-        />
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => save(note)}
-            disabled={saving}
-            className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50"
-            style={{ background: "var(--gold,#facc15)", color: "#1a1a1a" }}
+        {readOnly ? (
+          <p
+            className="text-sm whitespace-pre-wrap rounded-xl px-3 py-2.5"
+            style={{ background: "rgba(255,255,255,0.04)", color: "var(--foreground)" }}
           >
-            {saving ? "Opslaan…" : "Opslaan"}
-          </button>
-          {initialNote && (
-            <button
-              onClick={() => save("")}
-              disabled={saving}
-              className="px-4 py-2.5 rounded-xl text-sm font-medium text-[#f87171] transition-opacity disabled:opacity-50"
-              style={{ background: "rgba(248,113,113,0.1)" }}
-            >
-              Verwijderen
-            </button>
-          )}
-        </div>
+            {initialNote || "Geen notitie voor deze dag."}
+          </p>
+        ) : (
+          <>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={4}
+              autoFocus
+              placeholder="Bijv. verjaardagsfeestje, laat naar bed, veel gedronken, ziek…"
+              className="w-full rounded-xl px-3 py-2.5 text-sm resize-none bg-transparent border outline-none focus:border-[var(--xp-accent,#06d6c4)]"
+              style={{ borderColor: "var(--border,rgba(255,255,255,0.12))", color: "var(--foreground)" }}
+            />
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => save(note)}
+                disabled={saving}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50"
+                style={{ background: "var(--gold,#facc15)", color: "#1a1a1a" }}
+              >
+                {saving ? "Opslaan…" : "Opslaan"}
+              </button>
+              {initialNote && (
+                <button
+                  onClick={() => save("")}
+                  disabled={saving}
+                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-[#f87171] transition-opacity disabled:opacity-50"
+                  style={{ background: "rgba(248,113,113,0.1)" }}
+                >
+                  Verwijderen
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
