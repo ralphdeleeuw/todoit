@@ -9,6 +9,7 @@ import { DryStreakBanner } from "@/components/tracker/DryStreakBanner";
 import { StarCalendar } from "@/components/tracker/StarCalendar";
 import { MilestoneBadges } from "@/components/tracker/MilestoneBadges";
 import { RewardGoalCard } from "@/components/tracker/RewardGoalCard";
+import { DayNoteEditor } from "@/components/tracker/DayNoteEditor";
 import { CompletionEffect } from "@/components/tasks/CompletionEffect";
 import type { NightStats } from "@/lib/nightlog";
 
@@ -16,6 +17,11 @@ interface NightLogEntry {
   date: string;
   status: NightStatus;
   points: number;
+}
+
+interface DayNote {
+  date: string;
+  note: string;
 }
 
 interface RewardGoal {
@@ -50,6 +56,8 @@ interface TrackerClientProps {
   viewingName?: string | null;
   /** Tracker-enabled children a parent can switch between. */
   trackedChildren?: TrackedChild[];
+  /** Day notes for the viewed child (parents only). */
+  initialNotes?: DayNote[];
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -63,6 +71,7 @@ export function TrackerClient({
   isParentView = false,
   viewingName = null,
   trackedChildren = [],
+  initialNotes = [],
 }: TrackerClientProps) {
   const router = useRouter();
   const [year, setYear] = useState(initialYear);
@@ -73,6 +82,12 @@ export function TrackerClient({
   const [newlyReachedBadges, setNewlyReachedBadges] = useState<string[]>([]);
   const [activeGoal, setActiveGoal] = useState<RewardGoal | null>(initialData.activeGoal);
   const prevMilestonesRef = useRef<string[]>(initialData.stats.milestonesReached);
+
+  // Day notes (parents only): map of "YYYY-MM-DD" -> note text.
+  const [notes, setNotes] = useState<Record<string, string>>(
+    () => Object.fromEntries(initialNotes.map((n) => [n.date.slice(0, 10), n.note])),
+  );
+  const [editingDate, setEditingDate] = useState<string | null>(null);
 
   const monthKey = `/api/nightlog?month=${year}-${String(month).padStart(2, "0")}&child=${childId}`;
   const allKey = `/api/nightlog?child=${childId}`;
@@ -199,7 +214,14 @@ export function TrackerClient({
           month={month}
           logs={monthLogs}
           onMonthChange={handleMonthChange}
+          noteDates={isParentView ? new Set(Object.keys(notes)) : undefined}
+          onDayClick={isParentView ? (d) => setEditingDate(d) : undefined}
         />
+        {isParentView && (
+          <p className="text-[11px] text-[var(--arc-muted,#8e8eb6)] text-center mt-3">
+            Tik op een dag om een notitie toe te voegen 📝
+          </p>
+        )}
       </div>
 
       {/* Milestone badges */}
@@ -225,6 +247,25 @@ export function TrackerClient({
           setNewlyReachedBadges([]);
         }}
       />
+
+      {/* Day note editor (parents only) */}
+      {isParentView && (
+        <DayNoteEditor
+          key={editingDate ?? "closed"}
+          dateStr={editingDate}
+          initialNote={editingDate ? notes[editingDate] ?? "" : ""}
+          childId={childId}
+          onClose={() => setEditingDate(null)}
+          onSaved={(dateStr, note) =>
+            setNotes((prev) => {
+              const next = { ...prev };
+              if (note) next[dateStr] = note;
+              else delete next[dateStr];
+              return next;
+            })
+          }
+        />
+      )}
     </div>
   );
 }

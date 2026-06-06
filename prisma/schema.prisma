@@ -57,6 +57,7 @@ model User {
   sharedLists    TaskListMember[]  @relation("SharedListMember")
   nightLogs      NightLog[]        @relation("NightLogs")
   rewardGoals    RewardGoal[]      @relation("RewardGoals")
+  dayNotes       DayNote[]         @relation("DayNotes")
 
   @@index([familyId])
 }
@@ -203,6 +204,20 @@ model RewardGoal {
   updatedAt      DateTime  @updatedAt
 
   @@index([userId])
+}
+
+model DayNote {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation("DayNotes", fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  note        String   @db.Text
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
 }
 
 // ─── Tasks ─────────────────────────────────────────────────────────────────

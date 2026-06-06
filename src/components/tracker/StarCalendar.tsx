@@ -13,6 +13,10 @@ interface StarCalendarProps {
   month: number; // 1-12
   logs: CalendarEntry[];
   onMonthChange: (year: number, month: number) => void;
+  /** Set of "YYYY-MM-DD" dates that have a note (shown with a 📝 dot). */
+  noteDates?: Set<string>;
+  /** When provided, day cells become tappable (e.g. for parents to add a note). */
+  onDayClick?: (dateStr: string) => void;
 }
 
 const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
@@ -29,7 +33,7 @@ function statusColor(status: NightStatus): string {
   return "#818cf8";
 }
 
-export function StarCalendar({ year, month, logs, onMonthChange }: StarCalendarProps) {
+export function StarCalendar({ year, month, logs, onMonthChange, noteDates, onDayClick }: StarCalendarProps) {
   const logMap = new Map(logs.map((l) => {
     const d = new Date(l.date);
     return [`${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`, l.status];
@@ -116,34 +120,54 @@ export function StarCalendar({ year, month, logs, onMonthChange }: StarCalendarP
           const cellDate = new Date(year, month - 1, day);
           cellDate.setHours(0, 0, 0, 0);
           const isFuture = cellDate > today;
+          const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          const hasNote = noteDates?.has(dateStr) ?? false;
+          const clickable = !!onDayClick && !isFuture;
 
           return (
-            <div
-              key={key}
-              className="flex flex-col items-center justify-center aspect-square rounded-lg text-center"
-              style={{
-                background: status ? `${statusColor(status)}22` : "transparent",
-              }}
-            >
-              {status ? (
-                <span className="text-lg leading-none">{statusEmoji(status)}</span>
-              ) : (
+            <div key={key} className="relative">
+              {hasNote && (
                 <span
-                  className={cn(
-                    "text-xs font-medium",
-                    isFuture
-                      ? "text-transparent"
-                      : "text-[var(--arc-muted,#8e8eb6)]",
-                  )}
+                  className="absolute top-0.5 right-1 text-[8px] leading-none z-10"
+                  title="Notitie"
                 >
-                  {day}
+                  📝
                 </span>
               )}
-              {status && (
-                <span className="text-[9px] text-[var(--arc-muted,#8e8eb6)] leading-none mt-0.5">
-                  {day}
-                </span>
-              )}
+              <button
+                type="button"
+                disabled={!clickable}
+                onClick={clickable ? () => onDayClick!(dateStr) : undefined}
+                className={cn(
+                  "w-full flex flex-col items-center justify-center aspect-square rounded-lg text-center",
+                  clickable && "transition-colors hover:brightness-125 active:scale-95 cursor-pointer",
+                  !clickable && "cursor-default",
+                )}
+                style={{
+                  background: status ? `${statusColor(status)}22` : "transparent",
+                  outline: hasNote ? "1px solid rgba(250,204,21,0.4)" : undefined,
+                }}
+              >
+                {status ? (
+                  <span className="text-lg leading-none">{statusEmoji(status)}</span>
+                ) : (
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      isFuture
+                        ? "text-transparent"
+                        : "text-[var(--arc-muted,#8e8eb6)]",
+                    )}
+                  >
+                    {day}
+                  </span>
+                )}
+                {status && (
+                  <span className="text-[9px] text-[var(--arc-muted,#8e8eb6)] leading-none mt-0.5">
+                    {day}
+                  </span>
+                )}
+              </button>
             </div>
           );
         })}

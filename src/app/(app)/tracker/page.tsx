@@ -137,6 +137,17 @@ export default async function TrackerPage({
   // When a parent views a child, the UI reads "Nachten van <naam>".
   const viewingOwn = targetId === session.id;
   const viewingName = viewingOwn ? null : targetUser.name ?? "Kind";
+  const parentView = isParent && !viewingOwn;
+
+  // Day notes are a parent-only tool — only fetch them for the parent view.
+  const dayNotes = parentView
+    ? await prisma.dayNote.findMany({
+        where: { userId: targetId },
+        select: { date: true, note: true },
+        orderBy: { date: "asc" },
+      })
+    : [];
+  const initialNotes = JSON.parse(JSON.stringify(dayNotes));
 
   return (
     <TrackerClient
@@ -145,9 +156,10 @@ export default async function TrackerPage({
       initialYear={year}
       initialMonth={month}
       todayStatus={(todayLog?.status ?? null) as NightStatus | null}
-      isParentView={isParent && !viewingOwn}
+      isParentView={parentView}
       viewingName={viewingName}
       trackedChildren={trackedChildren.map((c) => ({ id: c.id, name: c.name }))}
+      initialNotes={initialNotes}
     />
   );
 }
