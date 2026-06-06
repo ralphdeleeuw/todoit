@@ -62,7 +62,7 @@ export function DayNoteEditor({
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4"
+        className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 text-white"
         style={{ background: "var(--arc-panel,#15142e)", border: "1px solid var(--arc-border-str,rgba(255,255,255,0.12))" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -71,7 +71,7 @@ export function DayNoteEditor({
             <p className="text-xs text-[var(--arc-muted,#8e8eb6)] uppercase tracking-wider font-semibold">
               Notitie
             </p>
-            <p className="font-bold text-lg">{formatDate(dateStr)}</p>
+            <p className="font-bold text-lg text-white">{formatDate(dateStr)}</p>
           </div>
           <button
             onClick={onClose}
@@ -84,8 +84,8 @@ export function DayNoteEditor({
 
         {readOnly ? (
           <p
-            className="text-sm whitespace-pre-wrap rounded-xl px-3 py-2.5"
-            style={{ background: "rgba(255,255,255,0.04)", color: "var(--foreground)" }}
+            className="text-sm whitespace-pre-wrap rounded-xl px-3 py-2.5 text-white"
+            style={{ background: "rgba(255,255,255,0.04)" }}
           >
             {initialNote || "Geen notitie voor deze dag."}
           </p>
@@ -97,8 +97,8 @@ export function DayNoteEditor({
               rows={4}
               autoFocus
               placeholder="Bijv. verjaardagsfeestje, laat naar bed, veel gedronken, ziek…"
-              className="w-full rounded-xl px-3 py-2.5 text-sm resize-none bg-transparent border outline-none focus:border-[var(--xp-accent,#06d6c4)]"
-              style={{ borderColor: "var(--border,rgba(255,255,255,0.12))", color: "var(--foreground)" }}
+              className="w-full rounded-xl px-3 py-2.5 text-sm resize-none bg-transparent border outline-none text-white placeholder:text-[var(--arc-muted,#8e8eb6)] focus:border-[var(--xp-accent,#06d6c4)]"
+              style={{ borderColor: "var(--arc-border-str,rgba(255,255,255,0.18))" }}
             />
 
             <div className="flex gap-2">
