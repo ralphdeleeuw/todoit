@@ -23,8 +23,7 @@ export async function completeTaskAndSpawnNext(
   let nextTask: Task | null = null;
 
   if (!permanent && completedTask.isRecurring && completedTask.recurrenceInterval) {
-    const base = completedTask.dueDate ?? completedTask.completedAt!;
-    const nextDue = addDays(base, completedTask.recurrenceInterval);
+    const nextDue = addDays(completedTask.completedAt!, completedTask.recurrenceInterval);
 
     const existingChild = await prisma.task.findFirst({
       where: { parentTaskId: completedTask.id, completedAt: null },
