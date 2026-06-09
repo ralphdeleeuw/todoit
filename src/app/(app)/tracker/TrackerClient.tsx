@@ -9,7 +9,7 @@ import { DryStreakBanner } from "@/components/tracker/DryStreakBanner";
 import { StarCalendar } from "@/components/tracker/StarCalendar";
 import { MilestoneBadges } from "@/components/tracker/MilestoneBadges";
 import { RewardGoalCard } from "@/components/tracker/RewardGoalCard";
-import { DayNoteEditor } from "@/components/tracker/DayNoteEditor";
+import { DayDetailSheet } from "@/components/tracker/DayDetailSheet";
 import { CompletionEffect } from "@/components/tasks/CompletionEffect";
 import type { NightStats } from "@/lib/nightlog";
 
@@ -102,12 +102,20 @@ export function TrackerClient({
   const stats = allData?.stats ?? initialData.stats;
   const monthLogs = monthData?.logs ?? [];
 
-  async function handleSelect(status: NightStatus) {
-    setSelectedStatus(status);
-    setLoading(true);
+  const todayStr = (() => {
+    const t = new Date();
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+  })();
 
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  // Quick lookup of the logged status per day in the shown month.
+  const statusByDate: Record<string, NightStatus> = Object.fromEntries(
+    monthLogs.map((l) => [l.date.slice(0, 10), l.status]),
+  );
+
+  // Sets/updates the night status for a given day (today or a forgotten past day).
+  async function submitStatus(status: NightStatus, dateStr: string) {
+    if (dateStr === todayStr) setSelectedStatus(status);
+    setLoading(true);
 
     try {
       const res = await fetch("/api/nightlog", {
@@ -197,10 +205,10 @@ export function TrackerClient({
         longestStreak={stats.longestStreak}
       />
 
-      {/* Night picker */}
+      {/* Night picker — for today */}
       <NightPicker
         selected={selectedStatus}
-        onSelect={handleSelect}
+        onSelect={(status) => submitStatus(status, todayStr)}
         loading={loading}
       />
 
@@ -216,12 +224,12 @@ export function TrackerClient({
           onMonthChange={handleMonthChange}
           noteDates={new Set(Object.keys(notes))}
           onDayClick={(d) => setEditingDate(d)}
-          allowEmptyClick={isParentView}
+          allowEmptyClick={true}
         />
         <p className="text-[11px] text-[var(--arc-muted,#8e8eb6)] text-center mt-3">
           {isParentView
-            ? "Tik op een dag om een notitie toe te voegen 📝"
-            : "Tik op een dag met 📝 om de notitie te lezen"}
+            ? "Tik op een dag om de status of notitie aan te passen"
+            : "Tik op een dag om de status alsnog in te vullen 🌙"}
         </p>
       </div>
 
@@ -249,15 +257,18 @@ export function TrackerClient({
         }}
       />
 
-      {/* Day note viewer/editor — read-only for the child, editable for parents */}
-      <DayNoteEditor
+      {/* Day detail — fill in status (everyone) + note (read-only for child) */}
+      <DayDetailSheet
         key={editingDate ?? "closed"}
         dateStr={editingDate}
+        initialStatus={editingDate ? statusByDate[editingDate] ?? null : null}
         initialNote={editingDate ? notes[editingDate] ?? "" : ""}
         childId={childId}
-        readOnly={!isParentView}
+        canEditNote={isParentView}
+        savingStatus={loading}
         onClose={() => setEditingDate(null)}
-        onSaved={(dateStr, note) =>
+        onSelectStatus={(status) => editingDate && submitStatus(status, editingDate)}
+        onNoteSaved={(dateStr, note) =>
           setNotes((prev) => {
             const next = { ...prev };
             if (note) next[dateStr] = note;
