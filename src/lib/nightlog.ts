@@ -27,11 +27,15 @@ function isDry(status: NightStatus): boolean {
   return status === "DRY" || status === "DRY_MEDS";
 }
 
+/** Counts only for streaks: dry WITHOUT medication. A meds night breaks the streak. */
+function isDryUnaided(status: NightStatus): boolean {
+  return status === "DRY";
+}
+
 /**
  * Computes the current consecutive dry-night streak.
- * Counts DRY and DRY_MEDS (physical dryness, regardless of meds).
- * A gap (missing night) or WET/WET_MEDS breaks the streak.
- * Logs must be sorted in ascending date order.
+ * Counts only DRY (without medication). DRY_MEDS, WET, WET_MEDS or a gap
+ * (missing night) break the streak. Logs must be sorted in ascending date order.
  */
 export function computeDryStreak(logs: NightLogEntry[]): number {
   if (logs.length === 0) return 0;
@@ -55,7 +59,7 @@ export function computeDryStreak(logs: NightLogEntry[]): number {
       if (d.getTime() !== expectedPrev.getTime()) break;
     }
 
-    if (!isDry(log.status)) break;
+    if (!isDryUnaided(log.status)) break;
 
     streak++;
     prevDate = d;
@@ -87,7 +91,7 @@ export function computeLongestDryStreak(logs: NightLogEntry[]): number {
       }
     }
 
-    if (isDry(log.status)) {
+    if (isDryUnaided(log.status)) {
       current++;
       longest = Math.max(longest, current);
     } else {
