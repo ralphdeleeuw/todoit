@@ -226,10 +226,13 @@ export function TrackerClient({
           onDayClick={(d) => setEditingDate(d)}
           allowEmptyClick={true}
         />
-        <p className="text-[11px] text-[var(--arc-muted,#8e8eb6)] text-center mt-3">
-          {isParentView
+        <p
+          className="text-xs text-center mt-3 rounded-lg py-2 px-3"
+          style={{ background: "rgba(6,214,196,0.1)", color: "var(--xp-accent,#06d6c4)" }}
+        >
+          👆 {isParentView
             ? "Tik op een dag om de status of notitie aan te passen"
-            : "Tik op een dag om de status alsnog in te vullen 🌙"}
+            : "Tik op een dag om een vergeten nacht alsnog in te vullen"}
         </p>
       </div>
 

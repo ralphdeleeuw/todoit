@@ -146,7 +146,12 @@ export function StarCalendar({ year, month, logs, onMonthChange, noteDates, onDa
                   !clickable && "cursor-default",
                 )}
                 style={{
-                  background: status ? `${statusColor(status)}22` : "transparent",
+                  background: status
+                    ? `${statusColor(status)}22`
+                    : clickable
+                      ? "rgba(255,255,255,0.06)"
+                      : "transparent",
+                  border: !status && clickable ? "1px dashed rgba(255,255,255,0.18)" : undefined,
                   outline: hasNote ? "1px solid rgba(250,204,21,0.4)" : undefined,
                 }}
               >
@@ -158,7 +163,9 @@ export function StarCalendar({ year, month, logs, onMonthChange, noteDates, onDa
                       "text-xs font-medium",
                       isFuture
                         ? "text-transparent"
-                        : "text-[var(--arc-muted,#8e8eb6)]",
+                        : clickable
+                          ? "text-white/70"
+                          : "text-[var(--arc-muted,#8e8eb6)]",
                     )}
                   >
                     {day}
